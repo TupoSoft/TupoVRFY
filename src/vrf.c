@@ -14,7 +14,8 @@
 #include "vrf.h"
 
 static void
-send_command(int sock, char *format, ...) {
+send_command(int sock, char *format, ...)
+{
     va_list args;
     va_start(args, format);
     char *command;
@@ -25,7 +26,8 @@ send_command(int sock, char *format, ...) {
 }
 
 static void
-read_response(int sock, char *buffer) {
+read_response(int sock, char *buffer)
+{
     char (*b)[SMTP_DATA_LINES_MAX_LENGTH] = (char (*)[SMTP_DATA_LINES_MAX_LENGTH]) buffer;
     if (read(sock, *b, sizeof *b) < 0) {
         printf("Failed to read from socket");
@@ -36,7 +38,8 @@ read_response(int sock, char *buffer) {
 }
 
 static int
-extract_local_part_and_domain(Vrf **result) {
+extract_local_part_and_domain(Vrf **result)
+{
     char *email = (*result)->email;
     char *at = email;
     while (*at && *at != '@') ++at;
@@ -51,7 +54,8 @@ extract_local_part_and_domain(Vrf **result) {
 }
 
 static int
-get_mx_records(const char *name, char **mxs, int limit) {
+get_mx_records(const char *name, char **mxs, int limit)
+{
     unsigned char response[NS_PACKETSZ];
     ns_msg handle;
     ns_rr rr;
@@ -89,7 +93,8 @@ get_mx_records(const char *name, char **mxs, int limit) {
 }
 
 static int
-check_mx(char *email, struct addrinfo *adrrinfo, Vrf **result) {
+check_mx(char *email, struct addrinfo *adrrinfo, Vrf **result)
+{
     int sock, client_fd;
     if ((sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) < 0) {
         printf("Failed to create a socket.");
@@ -174,7 +179,8 @@ print_vrf(FILE *fd, Vrf *result)
 }
 
 int
-verify(Vrf **result) {
+verify(Vrf **result)
+{
     if (extract_local_part_and_domain(result) == EXIT_FAILURE) {
         printf("Email parts extraction failure.");
         return EXIT_FAILURE;
