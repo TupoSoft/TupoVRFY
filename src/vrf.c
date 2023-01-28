@@ -142,11 +142,17 @@ void
 free_vrf(Vrf *result)
 {
     free(result->email);
+    result->email = NULL;
     free(result->local_part);
+    result->local_part = NULL;
     free(result->domain);
+    result->domain = NULL;
     free(result->mx_record);
+    result->mx_record = NULL;
     free(result->mx_domain);
+    result->mx_domain = NULL;
     free(result);
+    result = NULL;
 }
 
 void
