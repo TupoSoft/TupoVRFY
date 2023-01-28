@@ -225,5 +225,5 @@ main(int argc, char **argv)
     print_vrf(stdout, result);
     free_vrf(result);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
