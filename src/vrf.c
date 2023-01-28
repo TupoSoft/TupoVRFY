@@ -182,6 +182,7 @@ print_vrf(FILE *fd, Vrf *result)
     );
 
     free(verdict);
+    verdict = NULL;
 }
 
 int
