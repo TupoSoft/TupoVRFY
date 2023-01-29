@@ -9,22 +9,19 @@
 #include <stdbool.h>
 #include "config.h"
 
-typedef struct
-Vrf {
-    char *email;
-    char *local_part;
-    char *domain;
-    char *mx_record;
-    char *mx_domain;
-    bool result;
-    bool catch_all;
-} Vrf;
+typedef struct VRF *VRF;
+
+typedef enum
+VRF_err {
+    VRF_ERR = -1,
+    VRF_OK,
+} VRF_err;
+
+VRF_err
+print_vrf(FILE *, VRF);
 
 void
-print_vrf(FILE *fd, Vrf *result);
+free_vrf(VRF);
 
-void
-free_vrf(Vrf *result);
-
-int
-verify(Vrf **result);
+VRF_err
+verify(VRF *);
