@@ -14,6 +14,8 @@
 #include <stdarg.h>
 #include "vrf.h"
 
+#define free_and_nullify(p) free(p); p = NULL;
+
 struct
 VRF {
     char *email;
@@ -157,13 +159,6 @@ email_exists(bool result, bool catch_all, char **verdict)
     } else {
         *verdict = strdup("doesn't");
     }
-}
-
-static void
-free_and_nullify(void *p)
-{
-    free(p);
-    p = NULL;
 }
 
 void
