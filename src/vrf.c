@@ -14,7 +14,9 @@
 #include <stdarg.h>
 #include "vrf.h"
 
-#define free_and_nullify(p) free(p); p = NULL;
+#ifndef FREE
+#define FREE(p) free(p); p = NULL;
+#endif
 
 struct
 VRF {
@@ -50,7 +52,7 @@ read_response(int sock, char *buffer)
 {
     char (*b)[SMTP_DATA_LINES_MAX_LENGTH] = (char (*)[SMTP_DATA_LINES_MAX_LENGTH]) buffer;
     if (read(sock, *b, sizeof *b) < 0) {
-        printf("Failed to read from socket");
+        printf("Failed to read from socket.\n");
         return VRF_ERR;
     }
     if (PRINT_RESPONSE) {
@@ -120,13 +122,13 @@ check_mx(char *email, struct addrinfo *adrrinfo, VRF *result)
 {
     int sock, client_fd;
     if ((sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) < 0) {
-        printf("Failed to create a socket.");
+        printf("Failed to create a socket.\n");
         return VRF_ERR;
     }
 
     char buffer[SMTP_DATA_LINES_MAX_LENGTH];
     if ((client_fd = connect(sock, (struct sockaddr *) adrrinfo->ai_addr, sizeof(struct sockaddr))) < 0) {
-        printf("Connection failed.");
+        printf("Connection failed.\n");
         return VRF_ERR;
     }
     read_response(sock, buffer);
@@ -164,12 +166,12 @@ email_exists(bool result, bool catch_all, char **verdict)
 void
 free_vrf(VRF result)
 {
-    free_and_nullify(result->email);
-    free_and_nullify(result->local_part);
-    free_and_nullify(result->domain);
-    free_and_nullify(result->mx_record);
-    free_and_nullify(result->mx_domain);
-    free_and_nullify(result);
+    FREE(result->email);
+    FREE(result->local_part);
+    FREE(result->domain);
+    FREE(result->mx_record);
+    FREE(result->mx_domain);
+    FREE(result);
 }
 
 VRF_err
@@ -199,7 +201,7 @@ print_vrf(FILE *fd, VRF result)
                       verdict
     );
 
-    free_and_nullify(verdict);
+    FREE(verdict);
 
     return err < 0 ? VRF_ERR : VRF_OK;
 }
@@ -209,21 +211,21 @@ verify(VRF *result)
 {
     VRF_err err;
     if ((err = extract_local_part_and_domain(result)) != VRF_OK) {
-        printf("Email parts extraction failure.");
+        printf("Email parts extraction failure.\n");
         return err;
     }
 
     int mx_limit = 1;
     char **mxs = malloc(mx_limit * sizeof *mxs);
-    if ((err = get_mx_records("gmail.com", mxs, mx_limit)) != VRF_OK) {
-        printf("Failed to get MX records.");
+    if ((err = get_mx_records((*result)->domain, mxs, mx_limit)) != VRF_OK) {
+        printf("Failed to get MX records.\n");
         return err;
     }
     (*result)->mx_record = mxs[0];
 
     struct addrinfo *adrrinfo;
     if (getaddrinfo(mxs[0], "smtp", NULL, &adrrinfo)) {
-        printf("Failed to get the IP.");
+        printf("Failed to get the IP.\n");
         return VRF_ERR;
     }
 
@@ -233,7 +235,7 @@ verify(VRF *result)
         return err;
     }
     (*result)->catch_all = (*result)->result;
-    if ((*result)->catch_all) return EXIT_SUCCESS;
+    if ((*result)->catch_all) return VRF_OK;
 
     if ((err = check_mx((*result)->email, adrrinfo, result)) != VRF_OK) {
         return err;
