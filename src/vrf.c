@@ -18,6 +18,11 @@
 #define FREE(p) free(p); p = NULL;
 #endif
 
+#define CHECK_OK(f, err)    \
+if ((err = f) != VRF_OK) {  \
+    return err;             \
+}
+
 struct
 VRF {
     char *email;
@@ -29,7 +34,7 @@ VRF {
     bool catch_all;
 };
 
-static VRF_err
+static VRF_err_t
 send_command(int sock, char *format, ...)
 {
     va_list args;
@@ -38,6 +43,9 @@ send_command(int sock, char *format, ...)
     if (vasprintf(&command, format, args) < 0) {
         return VRF_ERR;
     }
+#if PRINT_RESPONSE
+    printf("REQUEST: %s", command);
+#endif
     if (send(sock, command, strlen(command), 0) < 0) {
         return VRF_ERR;
     }
@@ -47,22 +55,25 @@ send_command(int sock, char *format, ...)
     return VRF_OK;
 }
 
-static VRF_err
+static VRF_err_t
 read_response(int sock, char *buffer)
 {
     char (*b)[SMTP_DATA_LINES_MAX_LENGTH] = (char (*)[SMTP_DATA_LINES_MAX_LENGTH]) buffer;
-    if (read(sock, *b, sizeof *b) < 0) {
+    ssize_t nbytes;
+    if ((nbytes = read(sock, *b, sizeof *b)) < 0) {
         printf("Failed to read from socket.\n");
         return VRF_ERR;
     }
-    if (PRINT_RESPONSE) {
-        printf("%s", (char *) b);
-    }
 
+    #if PRINT_RESPONSE
+        printf("RESPONSE: %s", (char *) b);
+    #endif
+
+//    memset(*b, 0, nbytes);
     return VRF_OK;
 }
 
-static VRF_err
+static VRF_err_t
 extract_local_part_and_domain(VRF *result)
 {
     char *email = (*result)->email;
@@ -78,7 +89,7 @@ extract_local_part_and_domain(VRF *result)
     return h_errno != ENOMEM ? VRF_OK : VRF_ERR;
 }
 
-static VRF_err
+static VRF_err_t
 get_mx_records(const char *name, char **mxs, int limit)
 {
     unsigned char response[NS_PACKETSZ];
@@ -117,7 +128,7 @@ get_mx_records(const char *name, char **mxs, int limit)
     return VRF_OK;
 }
 
-static VRF_err
+static VRF_err_t
 check_mx(char *email, struct addrinfo *adrrinfo, VRF *result)
 {
     int sock, client_fd;
@@ -131,24 +142,28 @@ check_mx(char *email, struct addrinfo *adrrinfo, VRF *result)
         printf("Connection failed.\n");
         return VRF_ERR;
     }
-    read_response(sock, buffer);
+    #if PRINT_RESPONSE
+        printf("SUCCESSFULLY CONNECTED TO %s\n", (*result)->mx_record);
+    #endif
 
-    send_command(sock, "EHLO %s\n", CLIENT_MX);
-    read_response(sock, buffer);
-    send_command(sock, "MAIL FROM: <%s>\n", CLIENT_EMAIL);
-    read_response(sock, buffer);
-    send_command(sock, "RCPT TO: <%s>\n", email);
-    read_response(sock, buffer);
+    int err;
+    CHECK_OK(read_response(sock, buffer), err)
+    CHECK_OK(send_command(sock, "EHLO %s\n", CLIENT_MX), err)
+    CHECK_OK(read_response(sock, buffer), err)
+    CHECK_OK(send_command(sock, "MAIL FROM: <%s>\n", CLIENT_EMAIL), err)
+    CHECK_OK(read_response(sock, buffer), err)
+    CHECK_OK(send_command(sock, "RCPT TO: <%s>\n", email), err)
+    CHECK_OK(read_response(sock, buffer), err)
     char status[4];
     memcpy(status, buffer, 3);
     status[3] = '\0';
     long code = strtol(status, NULL, 0);
+    if (!code) return VRF_ERR;
     (*result)->result = code == 250;
 
-    send_command(sock, "QUIT\n");
-    close(client_fd);
+    CHECK_OK(send_command(sock, "QUIT\n"), err);
 
-    return EXIT_SUCCESS;
+    return !close(client_fd) ? VRF_OK : VRF_ERR;
 }
 
 static void
@@ -174,7 +189,7 @@ free_vrf(VRF result)
     FREE(result);
 }
 
-VRF_err
+VRF_err_t
 print_vrf(FILE *fd, VRF result)
 {
     char *verdict;
@@ -206,10 +221,10 @@ print_vrf(FILE *fd, VRF result)
     return err < 0 ? VRF_ERR : VRF_OK;
 }
 
-VRF_err
+VRF_err_t
 verify(VRF *result)
 {
-    VRF_err err;
+    VRF_err_t err;
     if ((err = extract_local_part_and_domain(result)) != VRF_OK) {
         printf("Email parts extraction failure.\n");
         return err;
@@ -257,10 +272,17 @@ main(int argc, char **argv)
     if (errno) return EXIT_FAILURE;
     if (!(result->email = strdup(argv[1]))) return EXIT_FAILURE;
     err = verify(&result);
-    if (err == VRF_ERR) return EXIT_FAILURE;
+    if (err == VRF_ERR) {
+        free_vrf(result);
+        return EXIT_FAILURE;
+    }
     err = print_vrf(stdout, result);
-    if (err == VRF_ERR) return EXIT_FAILURE;
+    if (err == VRF_ERR) {
+        free_vrf(result);
+        return EXIT_FAILURE;
+    }
+
     free_vrf(result);
 
-    return 0;
+    return EXIT_SUCCESS;
 }

@@ -12,16 +12,16 @@
 typedef struct VRF *VRF;
 
 typedef enum
-VRF_err {
+VRF_err_e {
     VRF_ERR = -1,
     VRF_OK,
-} VRF_err;
+} VRF_err_t;
 
-VRF_err
+VRF_err_t
 print_vrf(FILE *, VRF);
 
 void
 free_vrf(VRF);
 
-VRF_err
+VRF_err_t
 verify(VRF *);
