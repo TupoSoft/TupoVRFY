@@ -12,6 +12,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include "vrf.h"
 
 #ifndef FREE
@@ -43,7 +44,7 @@ send_command(int sock, char *format, ...)
     if (vasprintf(&command, format, args) < 0) {
         return VRF_ERR;
     }
-#if PRINT_RESPONSE
+#if DEBUG_RESPONSE
     printf("REQUEST: %s", command);
 #endif
     if (send(sock, command, strlen(command), 0) < 0) {
@@ -65,7 +66,7 @@ read_response(int sock, char *buffer)
         return VRF_ERR;
     }
 
-    #if PRINT_RESPONSE
+    #if DEBUG_RESPONSE
         printf("RESPONSE: %s", (char *) b);
     #endif
 
@@ -142,7 +143,7 @@ check_mx(char *email, struct addrinfo *adrrinfo, VRF *result)
         printf("Connection failed.\n");
         return VRF_ERR;
     }
-    #if PRINT_RESPONSE
+    #if DEBUG_RESPONSE
         printf("SUCCESSFULLY CONNECTED TO %s\n", (*result)->mx_record);
     #endif
 
