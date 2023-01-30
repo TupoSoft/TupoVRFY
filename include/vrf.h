@@ -6,7 +6,6 @@
 
 #define SMTP_DATA_LINES_MAX_LENGTH 998
 
-#include <stdbool.h>
 #include "config.h"
 
 typedef struct VRF *VRF;
