@@ -1,4 +1,4 @@
 #cmakedefine CLIENT_MX "@CLIENT_MX@"
 #cmakedefine CLIENT_EMAIL "@CLIENT_EMAIL@"
 #cmakedefine CATCH_ALL_LOCAL_PART "@CATCH_ALL_LOCAL_PART@"
-#cmakedefine01 DEBUG_RESPONSE
+#cmakedefine01 DEBUG

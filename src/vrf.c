@@ -19,6 +19,12 @@
 #define FREE(p) free(p); p = NULL;
 #endif
 
+#ifdef DEBUG
+    #define DEBUG_PRINT(...) printf(__VA_ARGS__)
+#else
+    #define DEBUG_PRINT
+#endif
+
 #define CHECK_OK(f, err)    \
 if ((err = f) != VRF_OK) {  \
     return err;             \
@@ -44,9 +50,9 @@ send_command(int sock, char *format, ...)
     if (vasprintf(&command, format, args) < 0) {
         return VRF_ERR;
     }
-#if DEBUG_RESPONSE
-    printf("REQUEST: %s", command);
-#endif
+
+    DEBUG_PRINT("REQUEST: %s", command);
+    
     if (send(sock, command, strlen(command), 0) < 0) {
         return VRF_ERR;
     }
@@ -66,9 +72,7 @@ read_response(int sock, char *buffer)
         return VRF_ERR;
     }
 
-    #if DEBUG_RESPONSE
-        printf("RESPONSE: %s", (char *) b);
-    #endif
+    DEBUG_PRINT("RESPONSE: %s", (char *) b);
 
 //    memset(*b, 0, nbytes);
     return VRF_OK;
@@ -143,9 +147,8 @@ check_mx(char *email, struct addrinfo *adrrinfo, VRF *result)
         printf("Connection failed.\n");
         return VRF_ERR;
     }
-    #if DEBUG_RESPONSE
-        printf("SUCCESSFULLY CONNECTED TO %s\n", (*result)->mx_record);
-    #endif
+    
+    DEBUG_PRINT("SUCCESSFULLY CONNECTED TO %s\n", (*result)->mx_record);
 
     int err;
     CHECK_OK(read_response(sock, buffer), err)
