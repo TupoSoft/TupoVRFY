@@ -19,7 +19,7 @@
 #define FREE(p) free(p); p = NULL;
 #endif
 
-#ifdef DEBUG
+#if DEBUG == 1
     #define DEBUG_PRINT(...) printf(__VA_ARGS__)
 #else
     #define DEBUG_PRINT
@@ -147,7 +147,7 @@ check_mx(char *email, struct addrinfo *adrrinfo, VRF *result)
         printf("Connection failed.\n");
         return VRF_ERR;
     }
-    
+
     DEBUG_PRINT("SUCCESSFULLY CONNECTED TO %s\n", (*result)->mx_record);
 
     int err;
