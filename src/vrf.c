@@ -269,10 +269,6 @@ main(int argc, char **argv)
         printf("No options provided.\n");
         return EXIT_FAILURE;
     }
-    else {
-        printf("Options provided\n");
-        return EXIT_SUCCESS;
-    }
 
     char *email = NULL;
     bool emailflag = false;
