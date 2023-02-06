@@ -267,9 +267,11 @@ main(int argc, char **argv)
 
     if(argc < 2) {
         printf("No options provided.\n");
+        return EXIT_FAILURE;
     }
     else {
         printf("Options provided\n");
+        return EXIT_SUCCESS;
     }
 
     char *email = NULL;
