@@ -279,7 +279,7 @@ main(int argc, char **argv)
     if (errno) return EXIT_FAILURE;
 
     int c;
-    while ((c = getopt(argc, argv, "e:v"))) {
+    while ((c = getopt(argc, argv, "e:v")) != -1) {
         switch(c) {
             case 'e':
                 result->email = strdup(optarg);
