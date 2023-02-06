@@ -266,7 +266,7 @@ main(int argc, char **argv)
     extern int optind;
 
     if(argc < 2) {
-        printf("No options provided.\n");
+        fprintf(stderr, "Usage: %s [OPTIONS].\n", argv[0]);
         return EXIT_FAILURE;
     }
 
@@ -283,7 +283,6 @@ main(int argc, char **argv)
         switch(c) {
             case 'e':
                 result->email = strdup(optarg);
-                printf("Result email: %s", result->email);
                 if (!result->email) {
                     return EXIT_FAILURE;
                     free_vrf(result);
