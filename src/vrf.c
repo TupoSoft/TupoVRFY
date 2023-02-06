@@ -262,11 +262,6 @@ verify(VRF *result)
 int
 main(int argc, char **argv)
 {
-    if (argc < 2) {
-        printf("Usage: vrf -e <email>\n");
-        return EXIT_FAILURE;
-    }
-
     extern char *optarg;
     extern int optind;
 
@@ -279,10 +274,11 @@ main(int argc, char **argv)
     if (errno) return EXIT_FAILURE;
 
     int c;
-    while ((c = getopt(argc, argv, "ev"))) {
+    while ((c = getopt(argc, argv, "e:v"))) {
         switch(c) {
             case 'e':
                 result->email = strdup(optarg);
+                printf("Result email: %s", result->email);
                 if (!result->email) {
                     return EXIT_FAILURE;
                     free_vrf(result);
