@@ -265,6 +265,10 @@ main(int argc, char **argv)
     extern char *optarg;
     extern int optind;
 
+    if(argc < 2) {
+        printf("No options provided.");
+    }
+
     char *email = NULL;
     bool emailflag = false;
     bool verboseflag = 0;
