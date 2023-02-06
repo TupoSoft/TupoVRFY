@@ -299,7 +299,7 @@ main(int argc, char **argv)
 
     verbose = verboseflag;
 
-    if (emailflag)
+    if (!emailflag)
     {
         fprintf(stderr, "-e flag is required.\n");
         free_vrf(result);
