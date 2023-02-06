@@ -266,7 +266,10 @@ main(int argc, char **argv)
     extern int optind;
 
     if(argc < 2) {
-        printf("No options provided.");
+        printf("No options provided.\n");
+    }
+    else {
+        printf("Options provided\n");
     }
 
     char *email = NULL;
