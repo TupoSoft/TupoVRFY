@@ -48,7 +48,7 @@ send_command(int sock, char *format, ...)
     }
 
     if (verbose) printf("REQUEST: %s", command);
-    
+
     if (send(sock, command, strlen(command), 0) < 0) {
         return VRF_ERR;
     }
@@ -284,8 +284,8 @@ main(int argc, char **argv)
             case 'e':
                 result->email = strdup(optarg);
                 if (!result->email) {
-                    return EXIT_FAILURE;
                     free_vrf(result);
+                    return EXIT_FAILURE;
                 }
 
                 emailflag = true;
