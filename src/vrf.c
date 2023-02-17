@@ -24,6 +24,8 @@ if ((err = f) != VRF_OK) {  \
     return err;             \
 }
 
+static bool verbose;
+
 struct
 VRF {
     char *email;
@@ -44,9 +46,9 @@ send_command(int sock, char *format, ...)
     if (vasprintf(&command, format, args) < 0) {
         return VRF_ERR;
     }
-#if DEBUG_RESPONSE
-    printf("REQUEST: %s", command);
-#endif
+
+    if (verbose) printf("REQUEST: %s", command);
+
     if (send(sock, command, strlen(command), 0) < 0) {
         return VRF_ERR;
     }
@@ -66,9 +68,7 @@ read_response(int sock, char *buffer)
         return VRF_ERR;
     }
 
-    #if DEBUG_RESPONSE
-        printf("RESPONSE: %s", (char *) b);
-    #endif
+    if (verbose) printf("RESPONSE: %s", (char *) b);
 
 //    memset(*b, 0, nbytes);
     return VRF_OK;
@@ -143,9 +143,8 @@ check_mx(char *email, struct addrinfo *adrrinfo, VRF *result)
         printf("Connection failed.\n");
         return VRF_ERR;
     }
-    #if DEBUG_RESPONSE
-        printf("SUCCESSFULLY CONNECTED TO %s\n", (*result)->mx_record);
-    #endif
+
+    if (verbose) printf("SUCCESSFULLY CONNECTED TO %s\n", (*result)->mx_record);
 
     int err;
     CHECK_OK(read_response(sock, buffer), err)
@@ -263,15 +262,49 @@ verify(VRF *result)
 int
 main(int argc, char **argv)
 {
-    if (argc < 2) {
-        printf("Usage: vrf <email>\n");
+    extern char *optarg;
+    extern int optind;
+
+    if(argc < 2) {
+        fprintf(stderr, "Usage: %s [OPTIONS].\n", argv[0]);
         return EXIT_FAILURE;
     }
+
+    char *email = NULL;
+    bool emailflag = false;
+    bool verboseflag = 0;
 
     int err;
     VRF result = malloc(sizeof *result);
     if (errno) return EXIT_FAILURE;
-    if (!(result->email = strdup(argv[1]))) return EXIT_FAILURE;
+
+    int c;
+    while ((c = getopt(argc, argv, "e:v")) != -1) {
+        switch(c) {
+            case 'e':
+                result->email = strdup(optarg);
+                if (!result->email) {
+                    free_vrf(result);
+                    return EXIT_FAILURE;
+                }
+
+                emailflag = true;
+            break;
+            case 'v':
+                verboseflag = true;
+            break;
+        }
+    }
+
+    verbose = verboseflag;
+
+    if (!emailflag)
+    {
+        fprintf(stderr, "-e flag is required.\n");
+        free_vrf(result);
+        return EXIT_FAILURE;
+    }
+
     err = verify(&result);
     if (err == VRF_ERR) {
         free_vrf(result);

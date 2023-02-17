@@ -6,7 +6,6 @@ include(GNUInstallDirs)
 set(CLIENT_MX CACHE STRING "Client email server address")
 set(CLIENT_EMAIL CACHE STRING "Client (sender) email address")
 set(CATCH_ALL_LOCAL_PART CACHE STRING "A dummy local part to test if catch-all is enabled")
-option(PRINT_RESPONSE "Print the request response" OFF)
 
 foreach (PARAM CLIENT_MX CLIENT_EMAIL CATCH_ALL_LOCAL_PART)
     if (${PARAM} STREQUAL "")
