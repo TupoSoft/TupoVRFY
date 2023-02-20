@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 3.24)
+project(vrf C)
+set(CMAKE_C_STANDARD 23)
+include(GNUInstallDirs)
+
+set(CLIENT_MX CACHE STRING "Client email server address")
+set(CLIENT_EMAIL CACHE STRING "Client (sender) email address")
+set(CATCH_ALL_LOCAL_PART CACHE STRING "A dummy local part to test if catch-all is enabled")
+
+foreach (PARAM CLIENT_MX CLIENT_EMAIL CATCH_ALL_LOCAL_PART)
+    if (${PARAM} STREQUAL "")
+        message(FATAL_ERROR "${PARAM} is not defined.")
+    endif ()
+endforeach ()
+
+configure_file(config.h.in config.h @ONLY)
+include_directories(include ${CMAKE_CURRENT_BINARY_DIR})
+link_libraries(resolv)
+add_library(vrf_lib STATIC src/vrf.c include/vrf.h)
+add_executable(vrf src/vrf.c include/vrf.h)
+install(TARGETS vrf_lib LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS vrf RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
