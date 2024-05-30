@@ -47,15 +47,7 @@
 #include <string>
 #include <vector>
 
-#include "config.h"
-
 namespace TupoSoft::VRF {
-    typedef enum
-            VRF_err_e {
-        VRF_ERR = -1,
-        VRF_OK,
-    } VRF_err_t;
-
     enum class EmailVerificationResult {
         Success,
         InvalidEmail,
