@@ -21,126 +21,88 @@ using namespace TupoSoft::VRF;
 
 static bool verbose;
 
-static VRF_err_t
-send_command(int sock, char *format, ...) {
-    va_list args;
-    va_start(args, format);
-    char *command;
-    if (vasprintf(&command, format, args) < 0) {
-        return VRF_ERR;
-    }
+// static VRF_err_t
+// send_command(int sock, char *format, ...) {
+//     va_list args;
+//     va_start(args, format);
+//     char *command;
+//     if (vasprintf(&command, format, args) < 0) {
+//         return VRF_ERR;
+//     }
+//
+//     if (verbose) printf("REQUEST: %s", command);
+//
+//     if (send(sock, command, strlen(command), 0) < 0) {
+//         return VRF_ERR;
+//     }
+//     va_end(args);
+//     free(command);
+//
+//     return VRF_OK;
+// }
 
-    if (verbose) printf("REQUEST: %s", command);
+// static VRF_err_t
+// read_response(int sock, char *buffer) {
+//     auto b = (char (*)[SMTP_DATA_LINES_MAX_LENGTH]) buffer;
+//     ssize_t nbytes;
+//     if ((nbytes = read(sock, *b, sizeof *b)) < 0) {
+//         printf("Failed to read from socket.\n");
+//         return VRF_ERR;
+//     }
+//
+//     if (verbose) printf("RESPONSE: %s", (char *) b);
+//
+//     //    memset(*b, 0, nbytes);
+//     return VRF_OK;
+// }
 
-    if (send(sock, command, strlen(command), 0) < 0) {
-        return VRF_ERR;
-    }
-    va_end(args);
-    free(command);
-
-    return VRF_OK;
-}
-
-static VRF_err_t
-read_response(int sock, char *buffer) {
-    auto b = (char (*)[SMTP_DATA_LINES_MAX_LENGTH]) buffer;
-    ssize_t nbytes;
-    if ((nbytes = read(sock, *b, sizeof *b)) < 0) {
-        printf("Failed to read from socket.\n");
-        return VRF_ERR;
-    }
-
-    if (verbose) printf("RESPONSE: %s", (char *) b);
-
-    //    memset(*b, 0, nbytes);
-    return VRF_OK;
-}
-
-auto TupoSoft::VRF::extractLocalPartAndDomain(const std::string &email) -> std::tuple<std::string, std::string> {
+auto TupoSoft::VRF::extractLocalPartAndDomain(const std::string &email) -> std::pair<std::string, std::string> {
     if (const size_t atPosition = email.find('@'); atPosition != std::string::npos) {
         std::string username = email.substr(0, atPosition);
         std::string domain = email.substr(atPosition + 1);
-        return std::make_tuple(username, domain);
+        return std::make_pair(username, domain);
     }
 
     throw std::invalid_argument("Invalid email format");
 }
 
-static VRF_err_t
-get_mx_records(const char *name, char **mxs, int limit) {
-    unsigned char response[NS_PACKETSZ];
-    ns_msg handle;
-    ns_rr rr;
-    int mx_index, ns_index, len;
-    char dispbuf[4096];
+// static VRF_err_t
+// check_mx(char *email, struct addrinfo *adrrinfo, EmailVerificationData *result) {
+//     int sock, client_fd;
+//     if ((sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) < 0) {
+//         printf("Failed to create a socket.\n");
+//         return VRF_ERR;
+//     }
+//
+//     char buffer[SMTP_DATA_LINES_MAX_LENGTH];
+//     if ((client_fd = connect(sock, (struct sockaddr *) adrrinfo->ai_addr, sizeof(struct sockaddr))) < 0) {
+//         printf("Connection failed.\n");
+//         return VRF_ERR;
+//     }
+//
+//     if (verbose) printf("SUCCESSFULLY CONNECTED TO %s\n", (*result)->mx_record);
+//
+//     int err;
+//     CHECK_OK(read_response(sock, buffer), err)
+//     CHECK_OK(send_command(sock, "EHLO %s\n", CLIENT_MX), err)
+//     CHECK_OK(read_response(sock, buffer), err)
+//     CHECK_OK(send_command(sock, "MAIL FROM: <%s>\n", CLIENT_EMAIL), err)
+//     CHECK_OK(read_response(sock, buffer), err)
+//     CHECK_OK(send_command(sock, "RCPT TO: <%s>\n", email), err)
+//     CHECK_OK(read_response(sock, buffer), err)
+//     char status[4];
+//     memcpy(status, buffer, 3);
+//     status[3] = '\0';
+//     long code = strtol(status, NULL, 0);
+//     if (!code) return VRF_ERR;
+//     (*result)->result = code == 250;
+//
+//     CHECK_OK(send_command(sock, "QUIT\n"), err);
+//
+//     return !close(client_fd) ? VRF_OK : VRF_ERR;
+// }
 
-    if ((len = res_search(name, ns_c_in, ns_t_mx, response, sizeof response)) < 0) {
-        return VRF_ERR;
-    }
-
-    if (ns_initparse(response, len, &handle) < 0) {
-        return VRF_ERR;
-    }
-
-    if ((len = ns_msg_count(handle, ns_s_an)) < 0) {
-        return VRF_ERR;
-    }
-
-    for (mx_index = 0, ns_index = 0;
-         mx_index < limit && ns_index < len;
-         ns_index++) {
-        if (ns_parserr(&handle, ns_s_an, ns_index, &rr)) {
-            continue;
-        }
-        ns_sprintrr(&handle, &rr, NULL, NULL, dispbuf, sizeof dispbuf);
-        if (ns_rr_class(rr) == ns_c_in && ns_rr_type(rr) == ns_t_mx) {
-            char mxname[NS_MAXDNAME];
-            dn_expand(ns_msg_base(handle), ns_msg_base(handle) + ns_msg_size(handle), ns_rr_rdata(rr) + NS_INT16SZ,
-                      mxname, sizeof mxname);
-            mxs[mx_index++] = strdup(mxname);
-        }
-    }
-
-    return VRF_OK;
-}
-
-static VRF_err_t
-check_mx(char *email, struct addrinfo *adrrinfo, EmailVerificationData *result) {
-    int sock, client_fd;
-    if ((sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) < 0) {
-        printf("Failed to create a socket.\n");
-        return VRF_ERR;
-    }
-
-    char buffer[SMTP_DATA_LINES_MAX_LENGTH];
-    if ((client_fd = connect(sock, (struct sockaddr *) adrrinfo->ai_addr, sizeof(struct sockaddr))) < 0) {
-        printf("Connection failed.\n");
-        return VRF_ERR;
-    }
-
-    if (verbose) printf("SUCCESSFULLY CONNECTED TO %s\n", (*result)->mx_record);
-
-    int err;
-    CHECK_OK(read_response(sock, buffer), err)
-    CHECK_OK(send_command(sock, "EHLO %s\n", CLIENT_MX), err)
-    CHECK_OK(read_response(sock, buffer), err)
-    CHECK_OK(send_command(sock, "MAIL FROM: <%s>\n", CLIENT_EMAIL), err)
-    CHECK_OK(read_response(sock, buffer), err)
-    CHECK_OK(send_command(sock, "RCPT TO: <%s>\n", email), err)
-    CHECK_OK(read_response(sock, buffer), err)
-    char status[4];
-    memcpy(status, buffer, 3);
-    status[3] = '\0';
-    long code = strtol(status, NULL, 0);
-    if (!code) return VRF_ERR;
-    (*result)->result = code == 250;
-
-    CHECK_OK(send_command(sock, "QUIT\n"), err);
-
-    return !close(client_fd) ? VRF_OK : VRF_ERR;
-}
-
-std::string email_exists(EmailVerificationResult result) {
+std::string email_exists(const EmailVerificationResult &result) {
     if (result == EmailVerificationResult::CatchAllDetected) {
         return "may";
     }
@@ -151,7 +113,7 @@ std::string email_exists(EmailVerificationResult result) {
     return "doesn't";
 }
 
-auto printVerificationData(std::ostream &os, EmailVerificationData emailVerificationData) {
+auto printVerificationData(std::ostream &os, EmailVerificationData emailVerificationData) -> std::ostream & {
     // char *verdict;
     // email_exists(result.result, result->catch_all, &verdict);
     // if (!verdict) return VRF_ERR;
@@ -189,6 +151,8 @@ auto printVerificationData(std::ostream &os, EmailVerificationData emailVerifica
                       emailVerificationData.mxRecord,
                       emailVerificationData.result == EmailVerificationResult::Success ? "true" : "false",
                       emailVerificationData.catchAll ? "true" : "false");
+
+    return os;
 }
 
 auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::string> {
@@ -215,27 +179,27 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
     return recordAddresses;
 }
 
-auto verify(const std::string &email) -> EmailVerificationData {
-    EmailVerificationData emailVerificationData;
-
-    std::tie(emailVerificationData.username, emailVerificationData.domain) = extractLocalPartAndDomain(email);
-    const auto mxRecords = getMXRecords(emailVerificationData.domain);
-    emailVerificationData.mxRecord = mxRecords.at(0);
-
-    char *dummy;
-    asprintf(&dummy, "%s@%s", CATCH_ALL_LOCAL_PART, (*result)->domain);
-    if ((err = check_mx(dummy, adrrinfo, result)) != VRF_OK) {
-        return err;
-    }
-    (*result)->catch_all = (*result)->result;
-    if ((*result)->catch_all) return VRF_OK;
-
-    if ((err = check_mx((*result)->email, adrrinfo, result)) != VRF_OK) {
-        return err;
-    }
-
-    return emailVerificationData;
-}
+// auto verify(const std::string &email) -> EmailVerificationData {
+//     EmailVerificationData emailVerificationData;
+//
+//     std::tie(emailVerificationData.username, emailVerificationData.domain) = extractLocalPartAndDomain(email);
+//     const auto mxRecords = getMXRecords(emailVerificationData.domain);
+//     emailVerificationData.mxRecord = mxRecords.at(0);
+//
+//     char *dummy;
+//     asprintf(&dummy, "%s@%s", CATCH_ALL_LOCAL_PART, (*result)->domain);
+//     if ((err = check_mx(dummy, adrrinfo, result)) != VRF_OK) {
+//         return err;
+//     }
+//     (*result)->catch_all = (*result)->result;
+//     if ((*result)->catch_all) return VRF_OK;
+//
+//     if ((err = check_mx((*result)->email, adrrinfo, result)) != VRF_OK) {
+//         return err;
+//     }
+//
+//     return emailVerificationData;
+// }
 
 int main(const int argc, char **argv) {
 #ifdef _WIN32

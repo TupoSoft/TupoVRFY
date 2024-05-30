@@ -74,7 +74,9 @@ namespace TupoSoft::VRF {
         bool catchAll;
     };
 
-    auto extractLocalPartAndDomain(const std::string &email) -> std::tuple<std::string, std::string>;
+    auto verify(const std::string &email) -> EmailVerificationData;
+
+    auto extractLocalPartAndDomain(const std::string &email) -> std::pair<std::string, std::string>;
 
     auto getMXRecords(const std::string &domain) -> std::vector<std::string>;
 }
