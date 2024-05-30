@@ -8,15 +8,6 @@
 #include <memory>
 #include <format>
 
-#ifndef FREE
-#define FREE(p) free(p); p = NULL;
-#endif
-
-#define CHECK_OK(f, err)    \
-if ((err = f) != VRF_OK) {  \
-    return err;             \
-}
-
 using namespace TupoSoft::VRF;
 
 static bool verbose;
@@ -101,17 +92,6 @@ auto TupoSoft::VRF::extractLocalPartAndDomain(const std::string &email) -> std::
 //
 //     return !close(client_fd) ? VRF_OK : VRF_ERR;
 // }
-
-std::string email_exists(const EmailVerificationResult &result) {
-    if (result == EmailVerificationResult::CatchAllDetected) {
-        return "may";
-    }
-    if (result == EmailVerificationResult::Success) {
-        return "does";
-    }
-
-    return "doesn't";
-}
 
 auto printVerificationData(std::ostream &os, EmailVerificationData emailVerificationData) -> std::ostream & {
     // char *verdict;
