@@ -94,29 +94,6 @@ auto TupoSoft::VRF::extractLocalPartAndDomain(const std::string &email) -> std::
 // }
 
 auto printVerificationData(std::ostream &os, EmailVerificationData emailVerificationData) -> std::ostream & {
-    // char *verdict;
-    // email_exists(result.result, result->catch_all, &verdict);
-    // if (!verdict) return VRF_ERR;
-    // int err = fprintf(fd,
-    //                   "\nVerification summary:\n"
-    //                   "email: %s\n"
-    //                   "local part: %s\n"
-    //                   "domain: %s\n"
-    //                   "mx record: %s\n"
-    //                   "mx domain: %s\n"
-    //                   "result: %s\n"
-    //                   "catch_all: %s\n\n"
-    //                   "It means that this email %s exist!\n\n",
-    //                   result->email,
-    //                   result->local_part,
-    //                   result->domain,
-    //                   result->mx_record,
-    //                   result->mx_domain,
-    //                   result->result ? "true" : "false",
-    //                   result->catch_all ? "true" : "false",
-    //                   verdict
-    // );
-
     os << std::format("\nVerification summary:\n"
                       "email: {}\n"
                       "local part: {}\n"
@@ -139,14 +116,14 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
     addrinfo addrinfoHints{};
     addrinfoHints.ai_socktype = SOCK_STREAM;
 
-    addrinfo *mxRecordInfoList;
+    addrinfo *mxRecordInfoList{};
     if (getaddrinfo(domain.c_str(), SMTP_SERVICE, &addrinfoHints, &mxRecordInfoList)) {
         throw std::runtime_error("Failed to get address info for domain: " + domain);
     }
 
-    const std::unique_ptr<addrinfo, decltype(&freeaddrinfo)> mxRecordInfos(mxRecordInfoList, freeaddrinfo);
+    const std::unique_ptr<addrinfo, decltype(&freeaddrinfo)> mxRecordInfos{mxRecordInfoList, freeaddrinfo};
 
-    std::vector<std::string> recordAddresses;
+    std::vector<std::string> recordAddresses{};
     for (const addrinfo *mxRecordInfo = mxRecordInfos.get(); mxRecordInfo != nullptr;
          mxRecordInfo = mxRecordInfo->ai_next) {
         char address[INET6_ADDRSTRLEN];
@@ -183,8 +160,7 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
 
 int main(const int argc, char **argv) {
 #ifdef _WIN32
-    WSADATA d;
-    if (WSAStartup(MAKEWORD(2, 2), &d)) {
+    if (WSADATA d; WSAStartup(MAKEWORD(2, 2), &d)) {
         std::cerr << "Winsock failed to initialize." << std::endl;
         return EXIT_FAILURE;
     }
@@ -197,27 +173,27 @@ int main(const int argc, char **argv) {
     }
 
     std::string email;
-    bool emailflag = false;
-    bool verboseflag = false;
+    bool emailFlag = false;
+    bool verboseFlag = false;
 
     int c;
     while ((c = getopt(argc, argv, "e:v")) != -1) {
         switch (c) {
             case 'e':
                 email = optarg;
-                emailflag = true;
+                emailFlag = true;
                 break;
             case 'v':
-                verboseflag = true;
+                verboseFlag = true;
                 break;
             default:
                 break;
         }
     }
 
-    verbose = verboseflag;
+    verbose = verboseFlag;
 
-    if (!emailflag) {
+    if (!emailFlag) {
         fprintf(stderr, "-e flag is required.\n");
         return EXIT_FAILURE;
     }
