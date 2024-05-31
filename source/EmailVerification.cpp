@@ -99,7 +99,6 @@ auto printVerificationData(std::ostream &os, EmailVerificationData emailVerifica
                       "local part: {}\n"
                       "domain: {}\n"
                       "mx record: {}\n"
-                      "mx domain: {}\n"
                       "result: {}\n"
                       "catch_all: {}\n\n",
                       emailVerificationData.email,
@@ -116,9 +115,10 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
     addrinfo addrinfoHints{};
     addrinfoHints.ai_socktype = SOCK_STREAM;
 
-    addrinfo *mxRecordInfoList{};
-    if (getaddrinfo(domain.c_str(), SMTP_SERVICE, &addrinfoHints, &mxRecordInfoList)) {
-        throw std::runtime_error("Failed to get address info for domain: " + domain);
+    auto mxRecordInfoList = new addrinfo;
+    if (const auto error = getaddrinfo(domain.c_str(), SMTP_SERVICE, &addrinfoHints, &mxRecordInfoList)) {
+        throw std::runtime_error(std::format("Failde to get address info for domain {}, error: {}", domain,
+                                             gai_strerror(error)));
     }
 
     const std::unique_ptr<addrinfo, decltype(&freeaddrinfo)> mxRecordInfos{mxRecordInfoList, freeaddrinfo};
@@ -136,78 +136,6 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
     return recordAddresses;
 }
 
-// auto verify(const std::string &email) -> EmailVerificationData {
-//     EmailVerificationData emailVerificationData;
-//
-//     std::tie(emailVerificationData.username, emailVerificationData.domain) = extractLocalPartAndDomain(email);
-//     const auto mxRecords = getMXRecords(emailVerificationData.domain);
-//     emailVerificationData.mxRecord = mxRecords.at(0);
-//
-//     char *dummy;
-//     asprintf(&dummy, "%s@%s", CATCH_ALL_LOCAL_PART, (*result)->domain);
-//     if ((err = check_mx(dummy, adrrinfo, result)) != VRF_OK) {
-//         return err;
-//     }
-//     (*result)->catch_all = (*result)->result;
-//     if ((*result)->catch_all) return VRF_OK;
-//
-//     if ((err = check_mx((*result)->email, adrrinfo, result)) != VRF_OK) {
-//         return err;
-//     }
-//
-//     return emailVerificationData;
-// }
-
-int main(const int argc, char **argv) {
-#ifdef _WIN32
-    if (WSADATA d; WSAStartup(MAKEWORD(2, 2), &d)) {
-        std::cerr << "Winsock failed to initialize." << std::endl;
-        return EXIT_FAILURE;
-    }
-#endif
-
-
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s [OPTIONS].\n", argv[0]);
-        return EXIT_FAILURE;
-    }
-
-    std::string email;
-    bool emailFlag = false;
-    bool verboseFlag = false;
-
-    int c;
-    while ((c = getopt(argc, argv, "e:v")) != -1) {
-        switch (c) {
-            case 'e':
-                email = optarg;
-                emailFlag = true;
-                break;
-            case 'v':
-                verboseFlag = true;
-                break;
-            default:
-                break;
-        }
-    }
-
-    verbose = verboseFlag;
-
-    if (!emailFlag) {
-        fprintf(stderr, "-e flag is required.\n");
-        return EXIT_FAILURE;
-    }
-
-    try {
-        const EmailVerificationData emailVerificationData = verify(email);
-        printVerificationData(std::cout, emailVerificationData);
-    } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
-    }
-
-#ifdef _WIN32
-    WSACleanup();
-#endif
-
-    return EXIT_SUCCESS;
+auto TupoSoft::VRF::verify(const std::string &email) -> EmailVerificationData {
+    return {};
 }

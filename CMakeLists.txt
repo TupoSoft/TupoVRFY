@@ -15,6 +15,10 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/
 
 configure_file(config.h.in config.h @ONLY)
 add_library(${PROJECT_NAME} ${HEADERS} ${SOURCES})
+if (WIN32)
+    target_link_libraries(${PROJECT_NAME} "ws2_32")
+endif ()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 23)
 
 # being a cross-platform target, we enforce standards conformance on MSVC
