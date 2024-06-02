@@ -134,7 +134,7 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
     std::array<unsigned char, NS_PACKETSZ> response{};
     ns_msg handle;
     ns_rr rr;
-    int len{};
+    int len;
 
     const std::unique_ptr<struct __res_state, decltype(&res_nclose)> resStatePtr(new struct __res_state, res_nclose);
     const auto resState = resStatePtr.get();
@@ -150,7 +150,7 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
         throw std::runtime_error{"ns_initparse failed!"};
     }
 
-    for (int ns_index = 0; ns_index < ns_msg_count(handle, ns_s_an); ns_index++) {
+    for (auto ns_index = 0; ns_index < ns_msg_count(handle, ns_s_an); ns_index++) {
         if (ns_parserr(&handle, ns_s_an, ns_index, &rr)) {
             continue;
         }
