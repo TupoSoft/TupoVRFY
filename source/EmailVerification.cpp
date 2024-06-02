@@ -10,8 +10,6 @@
 
 using namespace TupoSoft::VRF;
 
-static bool verbose;
-
 // static VRF_err_t
 // send_command(int sock, char *format, ...) {
 //     va_list args;
@@ -112,7 +110,7 @@ auto printVerificationData(std::ostream &os, EmailVerificationData emailVerifica
 }
 
 auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::string> {
-    PDNS_RECORD pDnsRecord = nullptr;
+    PDNS_RECORD pDnsRecord{};
 
     if (DnsQuery_A(domain.c_str(), DNS_TYPE_MX, DNS_QUERY_STANDARD, nullptr, &pDnsRecord, nullptr)) {
         throw std::runtime_error("DNS query failed with error code: " + std::to_string(
