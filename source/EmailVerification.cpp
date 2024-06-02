@@ -47,7 +47,7 @@ static bool verbose;
 //     return VRF_OK;
 // }
 
-auto TupoSoft::VRF::extractLocalPartAndDomain(const std::string &email) {
+auto TupoSoft::VRF::extractLocalPartAndDomain(const std::string &email) -> std::pair<std::string, std::string> {
     if (const auto atPosition = email.find('@'); atPosition != std::string::npos) {
         auto username = email.substr(0, atPosition);
         auto domain = email.substr(atPosition + 1);

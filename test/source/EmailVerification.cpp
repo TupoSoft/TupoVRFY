@@ -4,10 +4,15 @@
 
 using namespace TupoSoft::VRF;
 
-TEST(EmailVerificationTest, ExtractLocalPartAndDomain) {
+TEST(EmailVerificationTest, ThrowsInvalidArgumentErrorOnInvalidInput) {
+    const auto invalidEmail{"john.doe"};
+    EXPECT_THROW(extractLocalPartAndDomain(invalidEmail), std::invalid_argument);
+}
+
+TEST(EmailVerificationTest, ExtractLocalPartAndDomainSuccess) {
     const std::string expectedUsername{"john.doe"};
-    const std::string expectedDomain{"example.com"};
-    const std::string email{expectedUsername + '@' + expectedDomain};
+    const auto expectedDomain{"example.com"};
+    const auto email{expectedUsername + '@' + expectedDomain};
 
     const auto [actualUsername, actualDomain] = extractLocalPartAndDomain(email);
 
