@@ -5,8 +5,7 @@
 using namespace TupoSoft::VRF;
 
 TEST(EmailVerificationTest, ThrowsInvalidArgumentErrorOnInvalidInput) {
-    const auto invalidEmail{"john.doe"};
-    EXPECT_THROW(extractLocalPartAndDomain(invalidEmail), std::invalid_argument);
+    EXPECT_THROW(extractLocalPartAndDomain("john.doe"), std::invalid_argument);
 }
 
 TEST(EmailVerificationTest, ExtractLocalPartAndDomainSuccess) {
