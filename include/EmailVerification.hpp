@@ -7,7 +7,6 @@
 #ifdef WIN32
 
 #include <winsock2.h>
-#include <windns.h>
 
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600
@@ -36,10 +35,6 @@
 #include <stdbool.h>
 #endif
 
-#include <iostream>
-#include <cstdio>
-#include <getopt.h>
-
 #define SMTP_SERVICE "smtp"
 #define SMTP_DATA_LINES_MAX_LENGTH 998
 
@@ -63,11 +58,6 @@ namespace TupoSoft::VRF {
         std::string mxRecord;
         EmailVerificationResult result;
         bool catchAll;
-    };
-
-    struct MxQueryResult {
-        std::vector<std::string> mxRecords;
-        bool completed = false;
     };
 
     auto verify(const std::string &email) -> EmailVerificationData;

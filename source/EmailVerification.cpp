@@ -4,9 +4,11 @@
 
 #include "EmailVerification.hpp"
 
-#include <vector>
-#include <memory>
+#include <windns.h>
+
 #include <format>
+#include <memory>
+#include <vector>
 
 using namespace TupoSoft::VRF;
 
