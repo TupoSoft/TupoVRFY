@@ -7,6 +7,7 @@
 #ifdef WIN32
 
 #include <winsock2.h>
+#include <windns.h>
 
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600
@@ -23,16 +24,7 @@
 #define CLOSESOCKET(s) close(s)
 #define GETSOCKETERRNO() errno
 
-#include <arpa/nameser.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <resolv.h>
-#include <string.h>
-#include <errno.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <stdarg.h>
-#include <stdbool.h>
 #endif
 
 #define SMTP_SERVICE "smtp"

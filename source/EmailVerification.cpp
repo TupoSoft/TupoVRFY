@@ -4,8 +4,6 @@
 
 #include "EmailVerification.hpp"
 
-#include <windns.h>
-
 #include <format>
 #include <memory>
 #include <vector>
@@ -112,17 +110,18 @@ auto printVerificationData(std::ostream &os, EmailVerificationData emailVerifica
 }
 
 auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::string> {
+    std::vector<std::string> records;
+
+#ifdef WIN32
     PDNS_RECORD pDnsRecord{};
 
     if (const auto status = DnsQuery_A(domain.c_str(), DNS_TYPE_MX, DNS_QUERY_STANDARD, nullptr, &pDnsRecord,
                                        nullptr)) {
         throw std::runtime_error("DNS query failed with error code: " + std::to_string(status));
-    }
+                                       }
 
     auto dnsRecordDeleter = [](const PDNS_RECORD &p) { DnsRecordListFree(p, DnsFreeRecordList); };
     std::unique_ptr<DNS_RECORD, decltype(dnsRecordDeleter)> dnsRecords(pDnsRecord, dnsRecordDeleter);
-
-    std::vector<std::string> records;
 
     while (dnsRecords) {
         if (dnsRecords->wType == DNS_TYPE_MX) {
@@ -131,6 +130,39 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
 
         dnsRecords.reset(dnsRecords->pNext);
     }
+#else
+    std::array<unsigned char, NS_PACKETSZ> response{};
+    ns_msg handle;
+    ns_rr rr;
+    int len{};
+
+    const std::unique_ptr<struct __res_state, decltype(&res_nclose)> resStatePtr(new struct __res_state, res_nclose);
+    const auto resState = resStatePtr.get();
+    if (res_ninit(resState)) {
+        throw std::runtime_error{"res_ninit failed!"};
+    }
+
+    if (len = res_nsearch(resState, domain.c_str(), ns_c_in, ns_t_mx, response.data(), response.size()); len < 0) {
+        throw std::runtime_error{"res_search failed!"};
+    }
+
+    if (ns_initparse(response.data(), len, &handle) < 0) {
+        throw std::runtime_error{"ns_initparse failed!"};
+    }
+
+    for (int ns_index = 0; ns_index < ns_msg_count(handle, ns_s_an); ns_index++) {
+        if (ns_parserr(&handle, ns_s_an, ns_index, &rr)) {
+            continue;
+        }
+
+        if (ns_rr_class(rr) == ns_c_in && ns_rr_type(rr) == ns_t_mx) {
+            std::array<char, NS_MAXDNAME> mxname{};
+            dn_expand(ns_msg_base(handle), ns_msg_base(handle) + ns_msg_size(handle), ns_rr_rdata(rr) + NS_INT16SZ,
+                      mxname.data(), mxname.size());
+            records.emplace_back(mxname.data());
+        }
+    }
+#endif
 
     return records;
 }

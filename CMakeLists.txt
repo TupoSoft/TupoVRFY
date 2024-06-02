@@ -19,6 +19,8 @@ add_library(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 set(DEPENDENCIES "")
 if (WIN32)
     list(APPEND DEPENDENCIES "ws2_32" "dnsapi")
+else ()
+    list(APPEND DEPENDENCIES "resolv")
 endif ()
 target_link_libraries(${PROJECT_NAME} ${DEPENDENCIES})
 
