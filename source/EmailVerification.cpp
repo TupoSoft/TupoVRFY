@@ -117,17 +117,18 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
 
     auto mxRecordInfoList = new addrinfo;
     if (const auto error = getaddrinfo(domain.c_str(), SMTP_SERVICE, &addrinfoHints, &mxRecordInfoList)) {
-        throw std::runtime_error(std::format("Failde to get address info for domain {}, error: {}", domain,
+        throw std::runtime_error(std::format("Failed to get address info for domain {}, error: {}", domain,
                                              gai_strerror(error)));
     }
 
     const std::unique_ptr<addrinfo, decltype(&freeaddrinfo)> mxRecordInfos{mxRecordInfoList, freeaddrinfo};
 
     std::vector<std::string> recordAddresses{};
-    for (const addrinfo *mxRecordInfo = mxRecordInfos.get(); mxRecordInfo != nullptr;
+    for (const auto *mxRecordInfo = mxRecordInfos.get(); mxRecordInfo != nullptr;
          mxRecordInfo = mxRecordInfo->ai_next) {
-        char address[INET6_ADDRSTRLEN];
-        getnameinfo(mxRecordInfo->ai_addr, static_cast<socklen_t>(mxRecordInfo->ai_addrlen), address, sizeof(address),
+        std::string address{};
+        getnameinfo(mxRecordInfo->ai_addr, static_cast<socklen_t>(mxRecordInfo->ai_addrlen), address.data(),
+                    address.size(),
                     nullptr, 0, NI_NUMERICHOST);
 
         recordAddresses.emplace_back(address);
