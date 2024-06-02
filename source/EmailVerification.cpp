@@ -114,10 +114,9 @@ auto printVerificationData(std::ostream &os, EmailVerificationData emailVerifica
 auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::string> {
     PDNS_RECORD pDnsRecord{};
 
-    if (DnsQuery_A(domain.c_str(), DNS_TYPE_MX, DNS_QUERY_STANDARD, nullptr, &pDnsRecord, nullptr)) {
-        throw std::runtime_error("DNS query failed with error code: " + std::to_string(
-                                     DnsQuery_A(domain.c_str(), DNS_TYPE_MX, DNS_QUERY_STANDARD, nullptr, &pDnsRecord,
-                                                nullptr)));
+    if (const auto status = DnsQuery_A(domain.c_str(), DNS_TYPE_MX, DNS_QUERY_STANDARD, nullptr, &pDnsRecord,
+                                       nullptr)) {
+        throw std::runtime_error("DNS query failed with error code: " + std::to_string(status));
     }
 
     auto dnsRecordDeleter = [](const PDNS_RECORD &p) { DnsRecordListFree(p, DnsFreeRecordList); };
@@ -125,7 +124,7 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
 
     std::vector<std::string> records;
 
-    while (dnsRecords != nullptr) {
+    while (dnsRecords) {
         if (dnsRecords->wType == DNS_TYPE_MX) {
             records.emplace_back(dnsRecords->Data.MX.pNameExchange);
         }
