@@ -27,7 +27,7 @@ TEST(EmailVerificationTest, GetMXRecordsDoesNotThrow) {
 }
 
 TEST(EmailVerificationTest, GetMXRecordsSuccess) {
-    const std::string domain{"tuposoft.com"};
-    const std::vector<std::string> result = {"mail.tuposoft.com"};
+    const auto domain{"tuposoft.com"};
+    const std::vector result = {std::string{"mail."} + domain};
     EXPECT_EQ(result, getMXRecords(domain));
 }
