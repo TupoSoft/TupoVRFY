@@ -112,29 +112,28 @@ auto printVerificationData(std::ostream &os, EmailVerificationData emailVerifica
 }
 
 auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::string> {
-    addrinfo addrinfoHints{};
-    addrinfoHints.ai_socktype = SOCK_STREAM;
+    PDNS_RECORD pDnsRecord = nullptr;
 
-    auto mxRecordInfoList = new addrinfo;
-    if (const auto error = getaddrinfo(domain.c_str(), SMTP_SERVICE, &addrinfoHints, &mxRecordInfoList)) {
-        throw std::runtime_error(std::format("Failed to get address info for domain {}, error: {}", domain,
-                                             gai_strerror(error)));
+    if (DnsQuery_A(domain.c_str(), DNS_TYPE_MX, DNS_QUERY_STANDARD, nullptr, &pDnsRecord, nullptr)) {
+        throw std::runtime_error("DNS query failed with error code: " + std::to_string(
+                                     DnsQuery_A(domain.c_str(), DNS_TYPE_MX, DNS_QUERY_STANDARD, nullptr, &pDnsRecord,
+                                                nullptr)));
     }
 
-    const std::unique_ptr<addrinfo, decltype(&freeaddrinfo)> mxRecordInfos{mxRecordInfoList, freeaddrinfo};
+    auto dnsRecordDeleter = [](const PDNS_RECORD &p) { DnsRecordListFree(p, DnsFreeRecordList); };
+    std::unique_ptr<DNS_RECORD, decltype(dnsRecordDeleter)> dnsRecords(pDnsRecord, dnsRecordDeleter);
 
-    std::vector<std::string> recordAddresses{};
-    for (const auto *mxRecordInfo = mxRecordInfos.get(); mxRecordInfo != nullptr;
-         mxRecordInfo = mxRecordInfo->ai_next) {
-        std::string address{};
-        getnameinfo(mxRecordInfo->ai_addr, static_cast<socklen_t>(mxRecordInfo->ai_addrlen), address.data(),
-                    address.size(),
-                    nullptr, 0, NI_NUMERICHOST);
+    std::vector<std::string> records;
 
-        recordAddresses.emplace_back(address);
+    while (dnsRecords != nullptr) {
+        if (dnsRecords->wType == DNS_TYPE_MX) {
+            records.emplace_back(dnsRecords->Data.MX.pNameExchange);
+        }
+
+        dnsRecords.reset(dnsRecords->pNext);
     }
 
-    return recordAddresses;
+    return records;
 }
 
 auto TupoSoft::VRF::verify(const std::string &email) -> EmailVerificationData {

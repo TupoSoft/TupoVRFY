@@ -7,8 +7,7 @@
 #ifdef WIN32
 
 #include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "ws2_32.lib")
+#include <windns.h>
 
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600
@@ -64,6 +63,11 @@ namespace TupoSoft::VRF {
         std::string mxRecord;
         EmailVerificationResult result;
         bool catchAll;
+    };
+
+    struct MxQueryResult {
+        std::vector<std::string> mxRecords;
+        bool completed = false;
     };
 
     auto verify(const std::string &email) -> EmailVerificationData;

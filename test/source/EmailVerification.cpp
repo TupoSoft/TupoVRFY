@@ -18,3 +18,16 @@ TEST(EmailVerificationTest, ExtractLocalPartAndDomainSuccess) {
     EXPECT_EQ(actualUsername, expectedUsername);
     EXPECT_EQ(actualDomain, expectedDomain);
 }
+
+TEST(EmailVerificationTest, GetMXRecordsDoesNotThrow) {
+    const auto domain{"example.com"};
+    EXPECT_NO_THROW({
+        getMXRecords(domain);
+        });
+}
+
+TEST(EmailVerificationTest, GetMXRecordsSuccess) {
+    const std::string domain{"tuposoft.com"};
+    const std::vector<std::string> result = {"mail.tuposoft.com"};
+    EXPECT_EQ(result, getMXRecords(domain));
+}
