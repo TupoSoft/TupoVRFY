@@ -25,3 +25,8 @@ target_link_libraries(${PROJECT_NAME} ${BASE_PROJECT_NAME}::${BASE_PROJECT_NAME}
 
 include(GoogleTest)
 gtest_discover_tests(${PROJECT_NAME})
+
+if (ENABLE_TEST_COVERAGE)
+    target_compile_options(${BASE_PROJECT_NAME} PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
+    target_link_options(${BASE_PROJECT_NAME} PUBLIC -fprofile-arcs -ftest-coverage)
+endif ()
