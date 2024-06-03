@@ -117,8 +117,8 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
 
     if (const auto status = DnsQuery_A(domain.c_str(), DNS_TYPE_MX, DNS_QUERY_STANDARD, nullptr, &pDnsRecord,
                                        nullptr)) {
-        throw std::runtime_error("DNS query failed with error code: " + std::to_string(status));
-                                       }
+        throw std::runtime_error(std::format("DNS query failed with error code: {}", status));
+    }
 
     auto dnsRecordDeleter = [](const PDNS_RECORD &p) { DnsRecordListFree(p, DnsFreeRecordList); };
     std::unique_ptr<DNS_RECORD, decltype(dnsRecordDeleter)> dnsRecords(pDnsRecord, dnsRecordDeleter);
@@ -151,11 +151,7 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
     }
 
     for (auto ns_index = 0; ns_index < ns_msg_count(handle, ns_s_an); ns_index++) {
-        if (ns_parserr(&handle, ns_s_an, ns_index, &rr)) {
-            continue;
-        }
-
-        if (ns_rr_class(rr) == ns_c_in && ns_rr_type(rr) == ns_t_mx) {
+        if (!ns_parserr(&handle, ns_s_an, ns_index, &rr) && ns_rr_class(rr) == ns_c_in && ns_rr_type(rr) == ns_t_mx) {
             std::array<char, NS_MAXDNAME> mxname{};
             dn_expand(ns_msg_base(handle), ns_msg_base(handle) + ns_msg_size(handle), ns_rr_rdata(rr) + NS_INT16SZ,
                       mxname.data(), mxname.size());
