@@ -16,7 +16,9 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/
 configure_file(config.h.in config.h @ONLY)
 add_library(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
-set(DEPENDENCIES "")
+CPMAddPackage("gh:fmtlib/fmt#10.2.1")
+
+set(DEPENDENCIES "fmt")
 if (WIN32)
     list(APPEND DEPENDENCIES "ws2_32" "dnsapi")
 else ()
@@ -48,4 +50,5 @@ packageProject(
         INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
         VERSION_HEADER "${VERSION_HEADER_LOCATION}"
         COMPATIBILITY SameMajorVersion
+        DEPENDENCIES ${DEPENDENCIES}
 )

@@ -4,8 +4,10 @@
 
 #include "EmailVerification.hpp"
 
+#include <fmt/format.h>
+
+#include <array>
 #include <iostream>
-#include <format>
 #include <memory>
 #include <vector>
 
@@ -93,7 +95,7 @@ auto TupoSoft::VRF::extractLocalPartAndDomain(const std::string &email) -> std::
 // }
 
 auto printVerificationData(std::ostream &os, EmailVerificationData emailVerificationData) -> std::ostream & {
-    os << std::format("\nVerification summary:\n"
+    os << fmt::format("\nVerification summary:\n"
                       "email: {}\n"
                       "local part: {}\n"
                       "domain: {}\n"
@@ -118,7 +120,7 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
 
     if (const auto status = DnsQuery_A(domain.c_str(), DNS_TYPE_MX, DNS_QUERY_STANDARD, nullptr, &pDnsRecord,
                                        nullptr)) {
-        throw std::runtime_error(std::format("DNS query failed with error code: {}", status));
+        throw std::runtime_error(fmt::format("DNS query failed with error code: {}", status));
     }
 
     auto dnsRecordDeleter = [](const PDNS_RECORD &p) { DnsRecordListFree(p, DnsFreeRecordList); };
