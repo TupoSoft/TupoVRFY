@@ -4,6 +4,7 @@
 
 #include "EmailVerification.hpp"
 
+#include <iostream>
 #include <format>
 #include <memory>
 #include <vector>

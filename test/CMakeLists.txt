@@ -9,6 +9,10 @@ project(${PROJECT_NAME}_test VERSION ${PROJECT_VERSION})
 option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)
 option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
 
+if (${MSVC})
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+endif ()
+
 CPMAddPackage("gh:google/googletest@1.14.0")
 
 if (TEST_INSTALLED_VERSION)
