@@ -94,23 +94,6 @@ auto TupoSoft::VRF::extractLocalPartAndDomain(const std::string &email) -> std::
 //     return !close(client_fd) ? VRF_OK : VRF_ERR;
 // }
 
-auto printVerificationData(std::ostream &os, EmailVerificationData emailVerificationData) -> std::ostream & {
-    os << fmt::format("\nVerification summary:\n"
-                      "email: {}\n"
-                      "local part: {}\n"
-                      "domain: {}\n"
-                      "mx record: {}\n"
-                      "result: {}\n"
-                      "catch_all: {}\n\n",
-                      emailVerificationData.email,
-                      emailVerificationData.username,
-                      emailVerificationData.domain,
-                      emailVerificationData.mxRecord,
-                      emailVerificationData.result == EmailVerificationResult::Success ? "true" : "false",
-                      emailVerificationData.catchAll ? "true" : "false");
-
-    return os;
-}
 
 auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::string> {
     std::vector<std::string> records;
@@ -164,6 +147,24 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
 #endif
 
     return records;
+}
+
+std::ostream &TupoSoft::VRF::operator<<(std::ostream &os, const EmailVerificationData &data) {
+    os << fmt::format("\nVerification summary:\n"
+                      "email: {}\n"
+                      "local part: {}\n"
+                      "domain: {}\n"
+                      "mx record: {}\n"
+                      "result: {}\n"
+                      "catch_all: {}\n\n",
+                      data.email,
+                      data.username,
+                      data.domain,
+                      data.mxRecord,
+                      data.result == EmailVerificationResult::Success ? "true" : "false",
+                      data.catchAll ? "true" : "false");
+
+    return os;
 }
 
 auto TupoSoft::VRF::verify(const std::string &email) -> EmailVerificationData {

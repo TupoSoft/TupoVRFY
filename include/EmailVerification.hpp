@@ -52,6 +52,8 @@ namespace TupoSoft::VRF {
         bool catchAll;
     };
 
+    std::ostream &operator<<(std::ostream &os, const EmailVerificationData &data);
+
     auto verify(const std::string &email) -> EmailVerificationData;
 
     auto extractLocalPartAndDomain(const std::string &email) -> std::pair<std::string, std::string>;

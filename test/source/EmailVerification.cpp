@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include "fmt/format.h"
+
 using namespace TupoSoft::VRF;
 
 TEST(EmailVerificationTest, ThrowsInvalidArgumentErrorOnInvalidInput) {
@@ -23,4 +25,35 @@ TEST(EmailVerificationTest, GetMXRecordsSuccess) {
     const auto domain{"tuposoft.com"};
     const std::vector result = {std::string{"mail."} + domain};
     EXPECT_EQ(result, getMXRecords(domain));
+}
+
+TEST(EmailVerificationTest, EmailVerificationDataOutputSuccess) {
+    const auto data = EmailVerificationData{
+        "john.doe@tuposoft.com",
+        "john",
+        "tuposoft.com",
+        "mail.tuposoft.com",
+        EmailVerificationResult::Success,
+        false,
+    };
+
+    const auto expected = fmt::format("\nVerification summary:\n"
+                                      "email: {}\n"
+                                      "local part: {}\n"
+                                      "domain: {}\n"
+                                      "mx record: {}\n"
+                                      "result: {}\n"
+                                      "catch_all: {}\n\n",
+                                      data.email,
+                                      data.username,
+                                      data.domain,
+                                      data.mxRecord,
+                                      "true",
+                                      "false");
+
+    std::ostringstream os{};
+    os << data;
+    const auto actual = os.str();
+
+    EXPECT_EQ(expected, actual);
 }
