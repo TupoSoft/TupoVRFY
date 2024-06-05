@@ -10,7 +10,7 @@ TEST(EmailVerificationTest, ThrowsInvalidArgumentErrorOnInvalidInput) {
     EXPECT_THROW(extractLocalPartAndDomain("john.doe"), std::invalid_argument);
 }
 
-TEST(EmailVerificationTest, ExtractLocalPartAndDomainSuccess) {
+TEST(EmailVerificationTest, ExtractUsernameAndDomainSuccess) {
     const std::string expectedUsername{"john.doe"};
     const auto expectedDomain{"example.com"};
     const auto email{expectedUsername + '@' + expectedDomain};
