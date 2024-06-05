@@ -6,8 +6,8 @@
 
 #ifdef WIN32
 
-#include <winsock2.h>
 #include <windns.h>
+#include <winsock2.h>
 
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600
@@ -33,30 +33,23 @@
 #include <string>
 #include <vector>
 
-namespace TupoSoft::VRF {
-    enum class EmailVerificationResult {
-        Success,
-        InvalidEmail,
-        Failure,
-        CatchAllDetected,
-        InvalidDomain,
-        MXRecordNotFound
-    };
+namespace tuposoft::vrf {
+    enum class vrf_result { success, invalid_email, failure, catch_all_detected, invalid_domain, mx_record_not_found };
 
-    struct EmailVerificationData {
+    struct vrf_data {
         std::string email;
         std::string username;
         std::string domain;
-        std::string mxRecord;
-        EmailVerificationResult result;
-        bool catchAll;
+        std::string mx_record;
+        vrf_result result;
+        bool catch_all;
     };
 
-    std::ostream &operator<<(std::ostream &os, const EmailVerificationData &data);
+    std::ostream &operator<<(std::ostream &os, const vrf_data &data);
 
-    auto verify(const std::string &email) -> EmailVerificationData;
+    auto verify(const std::string &email) -> vrf_data;
 
-    auto extractLocalPartAndDomain(const std::string &email) -> std::pair<std::string, std::string>;
+    auto extract_email_parts(const std::string &email) -> std::pair<std::string, std::string>;
 
-    auto getMXRecords(const std::string &domain) -> std::vector<std::string>;
-}
+    auto get_mx_records(const std::string &domain) -> std::vector<std::string>;
+} // namespace tuposoft::vrf

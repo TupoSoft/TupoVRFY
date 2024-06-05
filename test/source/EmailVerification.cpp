@@ -4,10 +4,10 @@
 
 #include "fmt/format.h"
 
-using namespace TupoSoft::VRF;
+using namespace tuposoft::vrf;
 
 TEST(EmailVerificationTest, ThrowsInvalidArgumentErrorOnInvalidInput) {
-    EXPECT_THROW(extractLocalPartAndDomain("john.doe"), std::invalid_argument);
+    EXPECT_THROW(extract_email_parts("john.doe"), std::invalid_argument);
 }
 
 TEST(EmailVerificationTest, ExtractUsernameAndDomainSuccess) {
@@ -15,7 +15,7 @@ TEST(EmailVerificationTest, ExtractUsernameAndDomainSuccess) {
     const auto expectedDomain{"example.com"};
     const auto email{expectedUsername + '@' + expectedDomain};
 
-    const auto [actualUsername, actualDomain] = extractLocalPartAndDomain(email);
+    const auto [actualUsername, actualDomain] = extract_email_parts(email);
 
     EXPECT_EQ(actualUsername, expectedUsername);
     EXPECT_EQ(actualDomain, expectedDomain);
@@ -24,17 +24,12 @@ TEST(EmailVerificationTest, ExtractUsernameAndDomainSuccess) {
 TEST(EmailVerificationTest, GetMXRecordsSuccess) {
     const auto domain{"tuposoft.com"};
     const std::vector result = {std::string{"mail."} + domain};
-    EXPECT_EQ(result, getMXRecords(domain));
+    EXPECT_EQ(result, get_mx_records(domain));
 }
 
 TEST(EmailVerificationTest, EmailVerificationDataOutputSuccess) {
-    const auto data = EmailVerificationData{
-        "john.doe@tuposoft.com",
-        "john.doe",
-        "tuposoft.com",
-        "mail.tuposoft.com",
-        EmailVerificationResult::Success,
-        false,
+    const auto data = vrf_data{
+            "john.doe@tuposoft.com", "john.doe", "tuposoft.com", "mail.tuposoft.com", vrf_result::success, false,
     };
 
     const auto expected = fmt::format("\nVerification summary:\n"
@@ -44,12 +39,7 @@ TEST(EmailVerificationTest, EmailVerificationDataOutputSuccess) {
                                       "mx_record: {}\n"
                                       "result: {}\n"
                                       "catch_all: {}\n\n",
-                                      data.email,
-                                      data.username,
-                                      data.domain,
-                                      data.mxRecord,
-                                      "true",
-                                      "false");
+                                      data.email, data.username, data.domain, data.mx_record, "true", "false");
 
     std::ostringstream os{};
     os << data;

@@ -11,7 +11,7 @@
 #include <memory>
 #include <vector>
 
-using namespace TupoSoft::VRF;
+using namespace tuposoft::vrf;
 
 // static VRF_err_t
 // send_command(int sock, char *format, ...) {
@@ -48,10 +48,10 @@ using namespace TupoSoft::VRF;
 //     return VRF_OK;
 // }
 
-auto TupoSoft::VRF::extractLocalPartAndDomain(const std::string &email) -> std::pair<std::string, std::string> {
-    if (const auto atPosition = email.find('@'); atPosition != std::string::npos) {
-        auto username = email.substr(0, atPosition);
-        auto domain = email.substr(atPosition + 1);
+auto tuposoft::vrf::extract_email_parts(const std::string &email) -> std::pair<std::string, std::string> {
+    if (const auto at_position = email.find('@'); at_position != std::string::npos) {
+        auto username = email.substr(0, at_position);
+        auto domain = email.substr(at_position + 1);
         return {username, domain};
     }
 
@@ -95,26 +95,26 @@ auto TupoSoft::VRF::extractLocalPartAndDomain(const std::string &email) -> std::
 // }
 
 
-auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::string> {
+auto tuposoft::vrf::get_mx_records(const std::string &domain) -> std::vector<std::string> {
     std::vector<std::string> records;
 
 #ifdef WIN32
-    PDNS_RECORD pDnsRecord{};
+    PDNS_RECORD p_dns_record{};
 
-    if (const auto status = DnsQuery_A(domain.c_str(), DNS_TYPE_MX, DNS_QUERY_STANDARD, nullptr, &pDnsRecord,
-                                       nullptr)) {
+    if (const auto status =
+                DnsQuery_A(domain.c_str(), DNS_TYPE_MX, DNS_QUERY_STANDARD, nullptr, &p_dns_record, nullptr)) {
         throw std::runtime_error(fmt::format("DNS query failed with error code: {}", status));
     }
 
-    auto dnsRecordDeleter = [](const PDNS_RECORD &p) { DnsRecordListFree(p, DnsFreeRecordList); };
-    std::unique_ptr<DNS_RECORD, decltype(dnsRecordDeleter)> dnsRecords(pDnsRecord, dnsRecordDeleter);
+    auto dns_record_deleter = [](const PDNS_RECORD &p) { DnsRecordListFree(p, DnsFreeRecordList); };
+    std::unique_ptr<DNS_RECORD, decltype(dns_record_deleter)> dns_records(p_dns_record, dns_record_deleter);
 
-    while (dnsRecords) {
-        if (dnsRecords->wType == DNS_TYPE_MX) {
-            records.emplace_back(dnsRecords->Data.MX.pNameExchange);
+    while (dns_records) {
+        if (dns_records->wType == DNS_TYPE_MX) {
+            records.emplace_back(dns_records->Data.MX.pNameExchange);
         }
 
-        dnsRecords.reset(dnsRecords->pNext);
+        dns_records.reset(dns_records->pNext);
     }
 #else
     std::array<unsigned char, NS_PACKETSZ> response{};
@@ -122,13 +122,13 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
     ns_rr rr;
     int len;
 
-    const std::unique_ptr<struct __res_state, decltype(&res_nclose)> resStatePtr(new struct __res_state, res_nclose);
-    const auto resState = resStatePtr.get();
-    if (res_ninit(resState)) {
+    const std::unique_ptr<struct __res_state, decltype(&res_nclose)> res_state_ptr(new struct __res_state, res_nclose);
+    const auto res_state = res_state_ptr.get();
+    if (res_ninit(res_state)) {
         throw std::runtime_error{"res_ninit failed!"};
     }
 
-    if (len = res_nsearch(resState, domain.c_str(), ns_c_in, ns_t_mx, response.data(), response.size()); len < 0) {
+    if (len = res_nsearch(res_state, domain.c_str(), ns_c_in, ns_t_mx, response.data(), response.size()); len < 0) {
         throw std::runtime_error{"res_search failed!"};
     }
 
@@ -149,7 +149,7 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
     return records;
 }
 
-std::ostream &TupoSoft::VRF::operator<<(std::ostream &os, const EmailVerificationData &data) {
+std::ostream &tuposoft::vrf::operator<<(std::ostream &os, const vrf_data &data) {
     os << fmt::format("\nVerification summary:\n"
                       "email: {}\n"
                       "username: {}\n"
@@ -157,16 +157,10 @@ std::ostream &TupoSoft::VRF::operator<<(std::ostream &os, const EmailVerificatio
                       "mx_record: {}\n"
                       "result: {}\n"
                       "catch_all: {}\n\n",
-                      data.email,
-                      data.username,
-                      data.domain,
-                      data.mxRecord,
-                      data.result == EmailVerificationResult::Success ? "true" : "false",
-                      data.catchAll ? "true" : "false");
+                      data.email, data.username, data.domain, data.mx_record,
+                      data.result == vrf_result::success ? "true" : "false", data.catch_all ? "true" : "false");
 
     return os;
 }
 
-auto TupoSoft::VRF::verify(const std::string &email) -> EmailVerificationData {
-    return {};
-}
+auto tuposoft::vrf::verify(const std::string &email) -> vrf_data { return {}; }
