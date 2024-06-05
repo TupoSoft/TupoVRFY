@@ -30,7 +30,7 @@ TEST(EmailVerificationTest, GetMXRecordsSuccess) {
 TEST(EmailVerificationTest, EmailVerificationDataOutputSuccess) {
     const auto data = EmailVerificationData{
         "john.doe@tuposoft.com",
-        "john",
+        "john.doe",
         "tuposoft.com",
         "mail.tuposoft.com",
         EmailVerificationResult::Success,
@@ -39,9 +39,9 @@ TEST(EmailVerificationTest, EmailVerificationDataOutputSuccess) {
 
     const auto expected = fmt::format("\nVerification summary:\n"
                                       "email: {}\n"
-                                      "local part: {}\n"
+                                      "username: {}\n"
                                       "domain: {}\n"
-                                      "mx record: {}\n"
+                                      "mx_record: {}\n"
                                       "result: {}\n"
                                       "catch_all: {}\n\n",
                                       data.email,

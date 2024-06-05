@@ -152,9 +152,9 @@ auto TupoSoft::VRF::getMXRecords(const std::string &domain) -> std::vector<std::
 std::ostream &TupoSoft::VRF::operator<<(std::ostream &os, const EmailVerificationData &data) {
     os << fmt::format("\nVerification summary:\n"
                       "email: {}\n"
-                      "local part: {}\n"
+                      "username: {}\n"
                       "domain: {}\n"
-                      "mx record: {}\n"
+                      "mx_record: {}\n"
                       "result: {}\n"
                       "catch_all: {}\n\n",
                       data.email,
