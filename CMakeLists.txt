@@ -17,8 +17,15 @@ configure_file(config.h.in config.h @ONLY)
 add_library(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
 CPMAddPackage("gh:fmtlib/fmt#10.2.1")
+CPMAddPackage(
+        NAME Boost
+        VERSION 1.85.0
+        URL https://github.com/boostorg/boost/releases/download/boost-1.85.0/boost-1.85.0-cmake.tar.xz
+        URL_HASH SHA256=0A9CC56CEAE46986F5F4D43FE0311D90CF6D2FA9028258A95CAB49FFDACF92AD
+        OPTIONS "BOOST_INCLUDE_LIBRARIES asio"
+)
 
-set(DEPENDENCIES "fmt")
+set(DEPENDENCIES "fmt" Boost::asio)
 if (WIN32)
     list(APPEND DEPENDENCIES "ws2_32" "dnsapi")
 else ()
