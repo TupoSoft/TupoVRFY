@@ -53,3 +53,8 @@ dkms.conf
 
 **/*build*/
 *.idea/
+.cache
+CMakeCache.txt
+CMakeFiles
+cmake/CPM.cmake
+cpm-package-lock.cmake

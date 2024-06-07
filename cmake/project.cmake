@@ -4,6 +4,7 @@ set(PROJECT_DESCRIPTION "Email Verification")
 set(PROJECT_VERSION 0.0.3.0)
 set(CMAKE_PROJECT_HOMEPAGE_URL https://tuposoft.com)
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 file(
         DOWNLOAD

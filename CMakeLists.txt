@@ -17,6 +17,7 @@ configure_file(config.h.in config.h @ONLY)
 add_library(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
 CPMAddPackage("gh:fmtlib/fmt#10.2.1")
+CPMAddPackage("gh:c-ares/c-ares@1.30.0")
 CPMAddPackage(
         NAME Boost
         VERSION 1.85.0
@@ -24,8 +25,8 @@ CPMAddPackage(
         URL_HASH SHA256=0A9CC56CEAE46986F5F4D43FE0311D90CF6D2FA9028258A95CAB49FFDACF92AD
         OPTIONS "BOOST_INCLUDE_LIBRARIES asio"
 )
+set(DEPENDENCIES "fmt" Boost::asio "c-ares")
 
-set(DEPENDENCIES "fmt" Boost::asio)
 if (WIN32)
     list(APPEND DEPENDENCIES "ws2_32" "dnsapi")
 else ()

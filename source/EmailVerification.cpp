@@ -4,6 +4,7 @@
 
 #include "EmailVerification.hpp"
 
+#include <ares.h>
 #include <fmt/format.h>
 
 #include <array>
@@ -94,59 +95,58 @@ auto tuposoft::vrf::extract_email_parts(const std::string &email) -> std::pair<s
 //     return !close(client_fd) ? VRF_OK : VRF_ERR;
 // }
 
-
 auto tuposoft::vrf::get_mx_records(const std::string &domain) -> std::vector<std::string> {
-    std::vector<std::string> records;
+    std::vector<std::string> mx_records;
+    ares_channel channel;
 
-#ifdef WIN32
-    PDNS_RECORD p_dns_record{};
-
-    if (const auto status =
-                DnsQuery_A(domain.c_str(), DNS_TYPE_MX, DNS_QUERY_STANDARD, nullptr, &p_dns_record, nullptr)) {
-        throw std::runtime_error(fmt::format("DNS query failed with error code: {}", status));
+    // Initialize the library
+    if (ares_init(&channel) != ARES_SUCCESS) {
+        // Initialization failed
+        return mx_records;
     }
 
-    auto dns_record_deleter = [](const PDNS_RECORD &p) { DnsRecordListFree(p, DnsFreeRecordList); };
-    std::unique_ptr<DNS_RECORD, decltype(dns_record_deleter)> dns_records(p_dns_record, dns_record_deleter);
+    // Set options, if any, here
+    // For example: ares_set_option(channel, ...);
 
-    while (dns_records) {
-        if (dns_records->wType == DNS_TYPE_MX) {
-            records.emplace_back(dns_records->Data.MX.pNameExchange);
+    // Start the query for MX records
+    ares_query(
+            channel, domain.c_str(), ns_c_in, ns_t_mx,
+            +[](void *arg, int status, int timeouts, unsigned char *abuf, int alen) {
+                std::vector<std::string> *mx_records = static_cast<std::vector<std::string> *>(arg);
+                if (status != ARES_SUCCESS) {
+                    return; // Handle error: status will tell you what went wrong
+                }
+
+                struct ares_mx_reply *mx_reply;
+                if (ares_parse_mx_reply(abuf, alen, &mx_reply) == ARES_SUCCESS) {
+                    for (struct ares_mx_reply *mx = mx_reply; mx != NULL; mx = mx->next) {
+                        mx_records->push_back(mx->host);
+                    }
+                    ares_free_data(mx_reply);
+                }
+            },
+            &mx_records);
+
+    // The main event loop - we use select here, but your application might use another approach
+    for (;;) {
+        fd_set read_fds, write_fds;
+        struct timeval *tvp, tv;
+        int nfds;
+
+        FD_ZERO(&read_fds);
+        FD_ZERO(&write_fds);
+        nfds = ares_fds(channel, &read_fds, &write_fds);
+        if (nfds == 0) {
+            break; // No more active queries
         }
 
-        dns_records.reset(dns_records->pNext);
-    }
-#else
-    std::array<unsigned char, NS_PACKETSZ> response{};
-    ns_msg handle;
-    ns_rr rr;
-    int len;
-
-    const std::unique_ptr<struct __res_state, decltype(&res_nclose)> res_state_ptr(new struct __res_state, res_nclose);
-    const auto res_state = res_state_ptr.get();
-    if (res_ninit(res_state)) {
-        throw std::runtime_error{"res_ninit failed!"};
+        tvp = ares_timeout(channel, NULL, &tv);
+        select(nfds, &read_fds, &write_fds, NULL, tvp);
+        ares_process(channel, &read_fds, &write_fds);
     }
 
-    if (len = res_nsearch(res_state, domain.c_str(), ns_c_in, ns_t_mx, response.data(), response.size()); len < 0) {
-        throw std::runtime_error{"res_search failed!"};
-    }
-
-    if (ns_initparse(response.data(), len, &handle) < 0) {
-        throw std::runtime_error{"ns_initparse failed!"};
-    }
-
-    for (auto ns_index = 0; ns_index < ns_msg_count(handle, ns_s_an); ns_index++) {
-        if (!ns_parserr(&handle, ns_s_an, ns_index, &rr) && ns_rr_class(rr) == ns_c_in && ns_rr_type(rr) == ns_t_mx) {
-            std::array<char, NS_MAXDNAME> mxname{};
-            dn_expand(ns_msg_base(handle), ns_msg_base(handle) + ns_msg_size(handle), ns_rr_rdata(rr) + NS_INT16SZ,
-                      mxname.data(), mxname.size());
-            records.emplace_back(mxname.data());
-        }
-    }
-#endif
-
-    return records;
+    ares_destroy(channel);
+    return mx_records;
 }
 
 std::ostream &tuposoft::vrf::operator<<(std::ostream &os, const vrf_data &data) {
