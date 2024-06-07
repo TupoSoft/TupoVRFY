@@ -21,18 +21,18 @@ CPMAddPackage("gh:c-ares/c-ares@1.30.0")
 CPMAddPackage(
         NAME Boost
         VERSION 1.85.0
-        URL https://github.com/boostorg/boost/releases/download/boost-1.85.0/boost-1.85.0-cmake.tar.xz
-        URL_HASH SHA256=0A9CC56CEAE46986F5F4D43FE0311D90CF6D2FA9028258A95CAB49FFDACF92AD
+	GITHUB_REPOSITORY "boostorg/boost"
+	GIT_TAG "boost-1.85.0"
         OPTIONS "BOOST_INCLUDE_LIBRARIES asio"
 )
-set(DEPENDENCIES "fmt" Boost::asio "c-ares")
+set(DEPENDENCIES "fmt" "c-ares" Boost:asio)
 
 if (WIN32)
     list(APPEND DEPENDENCIES "ws2_32" "dnsapi")
 else ()
     list(APPEND DEPENDENCIES "resolv")
 endif ()
-target_link_libraries(${PROJECT_NAME} ${DEPENDENCIES})
+target_link_libraries(${PROJECT_NAME} ${DEPENDENCIES}) 
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 23)
 
