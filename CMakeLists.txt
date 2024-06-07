@@ -17,8 +17,9 @@ configure_file(config.h.in config.h @ONLY)
 add_library(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
 CPMAddPackage("gh:fmtlib/fmt#10.2.1")
+CPMAddPackage("gh:c-ares/c-ares@1.30.0")
 
-set(DEPENDENCIES "fmt")
+set(DEPENDENCIES "fmt" "c-ares")
 if (WIN32)
     list(APPEND DEPENDENCIES "ws2_32" "dnsapi")
 else ()
