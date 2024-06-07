@@ -1,4 +1,5 @@
 include(cmake/project.cmake)
+include(FetchContent)
 
 cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
 project(${PROJECT_NAME} VERSION ${PROJECT_VERSION})
@@ -18,14 +19,10 @@ add_library(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
 CPMAddPackage("gh:fmtlib/fmt#10.2.1")
 CPMAddPackage("gh:c-ares/c-ares@1.30.0")
-CPMAddPackage(
-        NAME Boost
-        VERSION 1.85.0
-	GITHUB_REPOSITORY "boostorg/boost"
-	GIT_TAG "boost-1.85.0"
-        OPTIONS "BOOST_INCLUDE_LIBRARIES asio"
-)
-set(DEPENDENCIES "fmt" "c-ares" Boost:asio)
+
+set(BOOST_INCLUDE_LIBRARIES filesystem asio headers)
+CPMAddPackage("gh:ClausKlein/boost-cmake@1.81.0-rc2")
+set(DEPENDENCIES "fmt" "c-ares" Boost::asio) 
 
 if (WIN32)
     list(APPEND DEPENDENCIES "ws2_32" "dnsapi")
@@ -60,3 +57,4 @@ packageProject(
         COMPATIBILITY SameMajorVersion
         DEPENDENCIES ${DEPENDENCIES}
 )
+
