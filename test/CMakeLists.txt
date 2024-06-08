@@ -9,7 +9,7 @@ project(${PROJECT_NAME}_test VERSION ${PROJECT_VERSION})
 option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)
 option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
 
-if (${MSVC})
+if (${WIN32})
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 endif ()
 
@@ -25,7 +25,7 @@ enable_testing()
 
 file(GLOB SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
-target_link_libraries(${PROJECT_NAME} ${BASE_PROJECT_NAME}::${BASE_PROJECT_NAME} GTest::gtest_main)
+target_link_libraries(${PROJECT_NAME} ${PROJECT_NAMESPACE}::${BASE_PROJECT_NAME} GTest::gtest_main)
 
 include(GoogleTest)
 gtest_discover_tests(${PROJECT_NAME})

@@ -107,8 +107,8 @@ auto tuposoft::vrf::get_mx_records(const std::string &domain) -> std::vector<std
     // Start the query for MX records
     ares_query_dnsrec(
             channel, domain.c_str(), ARES_CLASS_IN, ARES_REC_TYPE_MX,
-            +[](void *arg, const ares_status_t status, size_t timeouts, const ares_dns_record_t *dnsrec) {
-                auto *mxrs = static_cast<std::vector<std::string> *>(arg);
+            +[](void *arg, const ares_status_t status, size_t, const ares_dns_record_t *dnsrec) {
+                const auto mxrs = static_cast<std::vector<std::string> *>(arg);
                 if (status != ARES_SUCCESS) {
                     return; // Handle error: status will tell you what went wrong
                 }
@@ -148,7 +148,7 @@ auto tuposoft::vrf::get_mx_records(const std::string &domain) -> std::vector<std
     return mx_records;
 }
 
-std::ostream &tuposoft::vrf::operator<<(std::ostream &os, const vrf_data &data) {
+auto tuposoft::vrf::operator<<(std::ostream &os, const vrf_data &data) -> decltype(os) {
     os << fmt::format("\nVerification summary:\n"
                       "email: {}\n"
                       "username: {}\n"

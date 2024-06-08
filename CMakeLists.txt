@@ -28,9 +28,7 @@ CPMAddPackage(
 set(DEPENDENCIES "fmt" "c-ares")
 if (WIN32)
     add_definitions(-D_WIN32_WINNT=0x0A00)
-    list(APPEND DEPENDENCIES "ws2_32" "wsock32" "dnsapi")
-else ()
-    list(APPEND DEPENDENCIES "resolv")
+    list(APPEND DEPENDENCIES "ws2_32")
 endif ()
 target_link_libraries(${PROJECT_NAME} PUBLIC ${DEPENDENCIES})
 
@@ -53,7 +51,7 @@ CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.11.2")
 packageProject(
         NAME ${PROJECT_NAME}
         VERSION ${PROJECT_VERSION}
-        NAMESPACE ${PROJECT_NAME}
+        NAMESPACE ${PROJECT_NAMESPACE}
         BINARY_DIR ${PROJECT_BINARY_DIR}
         INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
         INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}

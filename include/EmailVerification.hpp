@@ -6,8 +6,6 @@
 
 #ifdef WIN32
 
-#include <windns.h>
-#include <windows.h>
 #include <winsock2.h>
 
 #define ISVALIDSOCKET(s) (s) != INVALID_SOCKET
@@ -42,7 +40,7 @@ namespace tuposoft::vrf {
         bool catch_all;
     };
 
-    std::ostream &operator<<(std::ostream &os, const vrf_data &data);
+    auto operator<<(std::ostream &os, const vrf_data &data) -> decltype(os);
 
     auto verify(const std::string &email) -> vrf_data;
 

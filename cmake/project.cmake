@@ -1,3 +1,4 @@
+set(PROJECT_NAMESPACE "tuposoft")
 set(PROJECT_NAME "vrf")
 set(CMAKE_MINIMUM_REQUIRED_VERSION 3.24)
 set(PROJECT_DESCRIPTION "Email Verification")
