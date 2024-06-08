@@ -14,8 +14,6 @@
 #include <thread>
 #include <vector>
 
-#include "../test/build/windows/_deps/c-ares-src/include/ares.h"
-
 using namespace tuposoft::vrf;
 
 // static VRF_err_t
