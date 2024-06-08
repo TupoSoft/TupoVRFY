@@ -19,23 +19,28 @@ add_library(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
 CPMAddPackage("gh:fmtlib/fmt#10.2.1")
 CPMAddPackage("gh:c-ares/c-ares@1.30.0")
+CPMAddPackage(
+        NAME asio
+        GITHUB_REPOSITORY chriskohlhoff/asio
+        GIT_TAG asio-1-30-2
+        DOWNLOAD_ONLY yes
+)
 
-set(BOOST_INCLUDE_LIBRARIES filesystem asio headers)
-CPMAddPackage("gh:ClausKlein/boost-cmake@1.81.0-rc2")
-set(DEPENDENCIES "fmt" "c-ares" Boost::asio) 
-
+set(DEPENDENCIES "fmt" "c-ares")
 if (WIN32)
-    list(APPEND DEPENDENCIES "ws2_32" "dnsapi")
+    add_definitions(-D_WIN32_WINNT=0x0A00)
+    list(APPEND DEPENDENCIES "ws2_32" "wsock32" "dnsapi")
 else ()
     list(APPEND DEPENDENCIES "resolv")
 endif ()
-target_link_libraries(${PROJECT_NAME} ${DEPENDENCIES}) 
+target_link_libraries(${PROJECT_NAME} PUBLIC ${DEPENDENCIES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 23)
 
 # being a cross-platform target, we enforce standards conformance on MSVC
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
-target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
+target_compile_definitions(${PROJECT_NAME} PRIVATE ASIO_STANDALONE)
+target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> PRIVATE ${asio_SOURCE_DIR}/asio/include)
 
 # ---- Create an installable target ----
 # this allows users to install and find the library via `find_package()`.
@@ -57,4 +62,3 @@ packageProject(
         COMPATIBILITY SameMajorVersion
         DEPENDENCIES ${DEPENDENCIES}
 )
-

@@ -7,11 +7,8 @@
 #ifdef WIN32
 
 #include <windns.h>
+#include <windows.h>
 #include <winsock2.h>
-
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600
-#endif
 
 #define ISVALIDSOCKET(s) (s) != INVALID_SOCKET
 #define CLOSESOCKET(s) closesocket(s)
