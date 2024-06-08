@@ -11,7 +11,6 @@
 #include <bitset>
 #include <iostream>
 #include <memory>
-#include <thread>
 #include <vector>
 
 using namespace tuposoft::vrf;
