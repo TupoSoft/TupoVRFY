@@ -100,7 +100,7 @@ auto tuposoft::vrf::get_mx_records(const std::string &domain) -> std::vector<std
     ares_channel channel;
 
     // Initialize the library
-    if (ares_init(&channel) != ARES_SUCCESS) {
+    if (ares_init_options(&channel, nullptr, 0) != ARES_SUCCESS) {
         // Initialization failed
         return mx_records;
     }
@@ -112,15 +112,15 @@ auto tuposoft::vrf::get_mx_records(const std::string &domain) -> std::vector<std
     ares_query(
             channel, domain.c_str(), ns_c_in, ns_t_mx,
             +[](void *arg, int status, int timeouts, unsigned char *abuf, int alen) {
-                std::vector<std::string> *mx_records = static_cast<std::vector<std::string> *>(arg);
+                auto *mx_records = static_cast<std::vector<std::string> *>(arg);
                 if (status != ARES_SUCCESS) {
                     return; // Handle error: status will tell you what went wrong
                 }
 
-                struct ares_mx_reply *mx_reply;
+                ares_mx_reply *mx_reply;
                 if (ares_parse_mx_reply(abuf, alen, &mx_reply) == ARES_SUCCESS) {
-                    for (struct ares_mx_reply *mx = mx_reply; mx != NULL; mx = mx->next) {
-                        mx_records->push_back(mx->host);
+                    for (struct ares_mx_reply *mx = mx_reply; mx != nullptr; mx = mx->next) {
+                        mx_records->emplace_back(mx->host);
                     }
                     ares_free_data(mx_reply);
                 }
@@ -130,18 +130,17 @@ auto tuposoft::vrf::get_mx_records(const std::string &domain) -> std::vector<std
     // The main event loop - we use select here, but your application might use another approach
     for (;;) {
         fd_set read_fds, write_fds;
-        struct timeval *tvp, tv;
-        int nfds;
+        timeval tv{};
 
         FD_ZERO(&read_fds);
         FD_ZERO(&write_fds);
-        nfds = ares_fds(channel, &read_fds, &write_fds);
+        const int nfds = ares_fds(channel, &read_fds, &write_fds);
         if (nfds == 0) {
             break; // No more active queries
         }
 
-        tvp = ares_timeout(channel, NULL, &tv);
-        select(nfds, &read_fds, &write_fds, NULL, tvp);
+        timeval *tvp = ares_timeout(channel, nullptr, &tv);
+        select(nfds, &read_fds, &write_fds, nullptr, tvp);
         ares_process(channel, &read_fds, &write_fds);
     }
 
