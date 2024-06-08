@@ -96,36 +96,36 @@ auto tuposoft::vrf::extract_email_parts(const std::string &email) -> std::pair<s
 // }
 
 auto tuposoft::vrf::get_mx_records(const std::string &domain) -> std::vector<std::string> {
-    std::vector<std::string> mx_records;
-    ares_channel channel;
+    std::vector<std::string> mx_records{};
+    ares_channel channel{};
 
     // Initialize the library
     if (ares_init_options(&channel, nullptr, 0) != ARES_SUCCESS) {
-        // Initialization failed
         return mx_records;
     }
 
-    // Set options, if any, here
-    // For example: ares_set_option(channel, ...);
-
     // Start the query for MX records
-    ares_query(
-            channel, domain.c_str(), ns_c_in, ns_t_mx,
-            +[](void *arg, int status, int timeouts, unsigned char *abuf, int alen) {
-                auto *mx_records = static_cast<std::vector<std::string> *>(arg);
+    ares_query_dnsrec(
+            channel, domain.c_str(), ARES_CLASS_IN, ARES_REC_TYPE_MX,
+            +[](void *arg, const ares_status_t status, size_t timeouts, const ares_dns_record_t *dnsrec) {
+                auto *mxrs = static_cast<std::vector<std::string> *>(arg);
                 if (status != ARES_SUCCESS) {
                     return; // Handle error: status will tell you what went wrong
                 }
 
-                ares_mx_reply *mx_reply;
-                if (ares_parse_mx_reply(abuf, alen, &mx_reply) == ARES_SUCCESS) {
-                    for (struct ares_mx_reply *mx = mx_reply; mx != nullptr; mx = mx->next) {
-                        mx_records->emplace_back(mx->host);
+                for (auto i = 0; i < ares_dns_record_rr_cnt(dnsrec, ARES_SECTION_ANSWER); ++i) {
+                    const auto rr =
+                            ares_dns_record_rr_get(const_cast<ares_dns_record_t *>(dnsrec), ARES_SECTION_ANSWER, i);
+                    if (!rr) {
+                        return;
                     }
-                    ares_free_data(mx_reply);
+
+                    if (ares_dns_rr_get_class(rr) == ARES_CLASS_IN && ares_dns_rr_get_type(rr) == ARES_REC_TYPE_MX) {
+                        mxrs->emplace_back(ares_dns_rr_get_str(rr, ARES_RR_MX_EXCHANGE));
+                    }
                 }
             },
-            &mx_records);
+            &mx_records, nullptr);
 
     // The main event loop - we use select here, but your application might use another approach
     for (;;) {
@@ -134,7 +134,7 @@ auto tuposoft::vrf::get_mx_records(const std::string &domain) -> std::vector<std
 
         FD_ZERO(&read_fds);
         FD_ZERO(&write_fds);
-        const int nfds = ares_fds(channel, &read_fds, &write_fds);
+        const auto nfds = ares_fds(channel, &read_fds, &write_fds);
         if (nfds == 0) {
             break; // No more active queries
         }
