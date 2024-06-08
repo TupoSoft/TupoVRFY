@@ -5,12 +5,16 @@
 #include "EmailVerification.hpp"
 
 #include <ares.h>
+#include <chrono>
 #include <fmt/format.h>
 
-#include <array>
+#include <bitset>
 #include <iostream>
 #include <memory>
+#include <thread>
 #include <vector>
+
+#include "../test/build/windows/_deps/c-ares-src/include/ares.h"
 
 using namespace tuposoft::vrf;
 
@@ -95,16 +99,59 @@ auto tuposoft::vrf::extract_email_parts(const std::string &email) -> std::pair<s
 //     return !close(client_fd) ? VRF_OK : VRF_ERR;
 // }
 
-auto tuposoft::vrf::get_mx_records(const std::string &domain) -> std::vector<std::string> {
-    std::vector<std::string> mx_records{};
-    ares_channel channel{};
+struct fd_sets {
+    int nfds;
+    fd_set read_fds;
+    fd_set write_fds;
+};
 
-    // Initialize the library
-    if (ares_init_options(&channel, nullptr, 0) != ARES_SUCCESS) {
+auto tuposoft::vrf::get_mx_records(const std::string &domain) -> std::vector<std::string> {
+    ares_library_init(ARES_LIB_INIT_ALL);
+    ares_channel channel{};
+    fd_sets fds{};
+
+    ares_options options{
+            .tries = 3,
+            .sock_state_cb =
+                    +[](void *data, const ares_socket_t socket_fd, const int readable, const int writable) {
+                        const auto c = static_cast<fd_sets *>(data);
+                        if (readable) {
+                            FD_SET(socket_fd, &c->read_fds);
+                        } else {
+                            FD_CLR(socket_fd, &c->read_fds);
+                        }
+
+                        if (writable) {
+                            FD_SET(socket_fd, &c->write_fds);
+                        } else {
+                            FD_CLR(socket_fd, &c->write_fds);
+                        }
+
+                        if (socket_fd >= c->nfds) {
+                            c->nfds = socket_fd + 1;
+                        } else {
+                            bool empty{true};
+                            for (int i = 0; i < c->nfds; ++i) {
+                                if (FD_ISSET(i, &c->read_fds) || FD_ISSET(i, &c->write_fds)) {
+                                    empty = false;
+                                    break;
+                                }
+                            }
+
+                            if (empty) {
+                                c->nfds = 0;
+                            }
+                        }
+                    },
+            .sock_state_cb_data = &fds,
+    };
+
+    std::vector<std::string> mx_records{};
+
+    if (ares_init_options(&channel, &options, ARES_OPT_SOCK_STATE_CB | ARES_OPT_TRIES) != ARES_SUCCESS) {
         return mx_records;
     }
 
-    // Start the query for MX records
     ares_query_dnsrec(
             channel, domain.c_str(), ARES_CLASS_IN, ARES_REC_TYPE_MX,
             +[](void *arg, const ares_status_t status, size_t, const ares_dns_record_t *dnsrec) {
@@ -125,26 +172,22 @@ auto tuposoft::vrf::get_mx_records(const std::string &domain) -> std::vector<std
                     }
                 }
             },
-            &mx_records, nullptr);
+            &mx_records, {});
 
-    // The main event loop - we use select here, but your application might use another approach
-    for (;;) {
-        fd_set read_fds, write_fds;
-        timeval tv{};
-
-        FD_ZERO(&read_fds);
-        FD_ZERO(&write_fds);
-        const auto nfds = ares_fds(channel, &read_fds, &write_fds);
-        if (nfds == 0) {
-            break; // No more active queries
+    while (fds.nfds) {
+        for (int i = 0; i < fds.nfds; ++i) {
+            if (FD_ISSET(i, &fds.read_fds)) {
+                ares_process_fd(channel, i, ARES_SOCKET_BAD);
+            }
+            if (FD_ISSET(i, &fds.write_fds)) {
+                ares_process_fd(channel, ARES_SOCKET_BAD, i);
+            }
         }
-
-        timeval *tvp = ares_timeout(channel, nullptr, &tv);
-        select(nfds, &read_fds, &write_fds, nullptr, tvp);
-        ares_process(channel, &read_fds, &write_fds);
     }
 
     ares_destroy(channel);
+    ares_destroy_options(&options);
+    ares_library_cleanup();
     return mx_records;
 }
 
