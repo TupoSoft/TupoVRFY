@@ -109,7 +109,6 @@ auto tuposoft::vrf::get_mx_records(const std::string &domain) -> std::vector<std
     fd_sets fds{};
 
     ares_options options{
-            .tries = 3,
             .sock_state_cb =
                     +[](void *data, const ares_socket_t socket_fd, const int readable, const int writable) {
                         const auto c = static_cast<fd_sets *>(data);
@@ -146,7 +145,7 @@ auto tuposoft::vrf::get_mx_records(const std::string &domain) -> std::vector<std
 
     std::vector<std::string> mx_records{};
 
-    if (ares_init_options(&channel, &options, ARES_OPT_SOCK_STATE_CB | ARES_OPT_TRIES) != ARES_SUCCESS) {
+    if (ares_init_options(&channel, &options, ARES_OPT_SOCK_STATE_CB) != ARES_SUCCESS) {
         return mx_records;
     }
 
