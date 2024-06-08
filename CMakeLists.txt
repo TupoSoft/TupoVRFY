@@ -1,5 +1,4 @@
 include(cmake/project.cmake)
-include(FetchContent)
 
 cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
 project(${PROJECT_NAME} VERSION ${PROJECT_VERSION})
