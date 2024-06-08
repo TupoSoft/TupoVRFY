@@ -130,8 +130,8 @@ auto tuposoft::vrf::get_mx_records(const std::string &domain) -> std::vector<std
                         if (socket_fd >= c->nfds) {
                             c->nfds = socket_fd + 1;
                         } else {
-                            bool empty{true};
-                            for (int i = 0; i < c->nfds; ++i) {
+                            auto empty{true};
+                            for (auto i{0}; i < c->nfds; ++i) {
                                 if (FD_ISSET(i, &c->read_fds) || FD_ISSET(i, &c->write_fds)) {
                                     empty = false;
                                     break;
