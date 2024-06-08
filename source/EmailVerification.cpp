@@ -5,12 +5,10 @@
 #include "EmailVerification.hpp"
 
 #include <ares.h>
-#include <chrono>
 #include <fmt/format.h>
 
-#include <bitset>
+#include <regex>
 #include <iostream>
-#include <memory>
 #include <vector>
 
 using namespace tuposoft::vrf;
@@ -51,10 +49,11 @@ using namespace tuposoft::vrf;
 // }
 
 auto tuposoft::vrf::extract_email_parts(const std::string &email) -> std::pair<std::string, std::string> {
-    if (const auto at_position = email.find('@'); at_position != std::string::npos) {
-        auto username = email.substr(0, at_position);
-        auto domain = email.substr(at_position + 1);
-        return {username, domain};
+    static const auto email_regex = std::regex(R"((\w+[\w\.]*)@(\w+\.\w+))");
+
+    auto matches = std::smatch();
+    if (std::regex_search(email, matches, email_regex)) {
+        return {matches[1], matches[2]};
     }
 
     throw std::invalid_argument("Invalid email format");
