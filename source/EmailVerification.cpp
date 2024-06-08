@@ -7,8 +7,8 @@
 #include <ares.h>
 #include <fmt/format.h>
 
-#include <regex>
 #include <iostream>
+#include <regex>
 #include <vector>
 
 using namespace tuposoft::vrf;
@@ -51,8 +51,7 @@ using namespace tuposoft::vrf;
 auto tuposoft::vrf::extract_email_parts(const std::string &email) -> std::pair<std::string, std::string> {
     static const auto email_regex = std::regex(R"((\w+[\w\.]*)@(\w+\.\w+))");
 
-    auto matches = std::smatch();
-    if (std::regex_search(email, matches, email_regex)) {
+    if (auto matches = std::smatch(); std::regex_search(email, matches, email_regex)) {
         return {matches[1], matches[2]};
     }
 
