@@ -214,7 +214,10 @@ auto tuposoft::vrf::check_mx(const std::string &email, const std::string &mail_s
 
     while (error && endpoint_iterator != asio::ip::tcp::resolver::iterator()) {
         socket.close();
-        socket.connect(*endpoint_iterator++, error);
+        auto ec = socket.connect(*endpoint_iterator++, error);
+        if (ec) {
+            std::cout << "Error occurred: " << ec.message() << '\n';
+        }
     }
     if (error) {
         throw asio::system_error(error);
