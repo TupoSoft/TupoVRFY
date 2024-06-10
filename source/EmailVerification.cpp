@@ -244,7 +244,7 @@ auto tuposoft::vrf::check_mx(const std::string &email, const std::string &mail_s
     std::string server_response;
     std::getline(response_stream, server_response);
 
-    return std::atoi(server_response.substr(0, 3).c_str());
+    return std::stoi(server_response);
 }
 
 auto tuposoft::vrf::verify(const std::string &email) -> vrf_data { return {}; }
