@@ -3,8 +3,10 @@
 //
 
 #include "EmailVerification.hpp"
+#include "asio/io_service.hpp"
 
 #include <ares.h>
+#include <asio.hpp>
 #include <fmt/format.h>
 
 #include <iostream>
@@ -59,7 +61,8 @@ auto tuposoft::vrf::extract_email_parts(const std::string &email) -> std::pair<s
 }
 
 // static VRF_err_t
-// check_mx(char *email, struct addrinfo *adrrinfo, EmailVerificationData *result) {
+// check_mx(char *email, struct addrinfo *adrrinfo, EmailVerificationData
+// *result) {
 //     int sock, client_fd;
 //     if ((sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) < 0) {
 //         printf("Failed to create a socket.\n");
@@ -67,12 +70,14 @@ auto tuposoft::vrf::extract_email_parts(const std::string &email) -> std::pair<s
 //     }
 //
 //     char buffer[SMTP_DATA_LINES_MAX_LENGTH];
-//     if ((client_fd = connect(sock, (struct sockaddr *) adrrinfo->ai_addr, sizeof(struct sockaddr))) < 0) {
+//     if ((client_fd = connect(sock, (struct sockaddr *) adrrinfo->ai_addr,
+//     sizeof(struct sockaddr))) < 0) {
 //         printf("Connection failed.\n");
 //         return VRF_ERR;
 //     }
 //
-//     if (verbose) printf("SUCCESSFULLY CONNECTED TO %s\n", (*result)->mx_record);
+//     if (verbose) printf("SUCCESSFULLY CONNECTED TO %s\n",
+//     (*result)->mx_record);
 //
 //     int err;
 //     CHECK_OK(read_response(sock, buffer), err)
@@ -197,6 +202,49 @@ auto tuposoft::vrf::operator<<(std::ostream &os, const vrf_data &data) -> declty
                       data.result == vrf_result::success ? "true" : "false", data.catch_all ? "true" : "false");
 
     return os;
+}
+
+auto tuposoft::vrf::check_mx(const std::string &email, const std::string &mail_server) -> int {
+    asio::io_service ios;
+    asio::ip::tcp::resolver tcp_resolver(ios);
+    asio::ip::tcp::resolver::query query(mail_server, "25");
+    asio::ip::tcp::resolver::iterator endpoint_iterator = tcp_resolver.resolve(query);
+    asio::ip::tcp::socket socket(ios);
+    asio::error_code error = asio::error::host_not_found;
+
+    while (error && endpoint_iterator != asio::ip::tcp::resolver::iterator()) {
+        socket.close();
+        socket.connect(*endpoint_iterator++, error);
+    }
+    if (error) {
+        throw asio::system_error(error);
+    }
+
+    // Read the server's greeting message
+    asio::streambuf response;
+    asio::read_until(socket, response, "\n");
+
+    // Send EHLO command
+    std::string ehlo_cmd = "EHLO client.example.com\r\n";
+    asio::write(socket, asio::buffer(ehlo_cmd), error);
+
+    // Send MAIL FROM command
+    std::string mail_from_cmd = "MAIL FROM:< example@example.com>\r\n";
+    asio::write(socket, asio::buffer(mail_from_cmd), error);
+
+    // Send RCPT TO command
+    std::string rcpt_to_cmd = "RCPT TO:<" + email + ">\r\n";
+    asio::write(socket, asio::buffer(rcpt_to_cmd), error);
+
+    // Read the server's response
+    asio::read_until(socket, response, "\n");
+
+    // Check if the recipient is valid
+    std::istream response_stream(&response);
+    std::string server_response;
+    std::getline(response_stream, server_response);
+
+    return std::atoi(server_response.substr(0, 3).c_str());
 }
 
 auto tuposoft::vrf::verify(const std::string &email) -> vrf_data { return {}; }
