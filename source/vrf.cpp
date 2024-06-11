@@ -2,7 +2,7 @@
 // Created by Tuposoft Collective on 23.01.2023.
 //
 
-#include "EmailVerification.hpp"
+#include "vrf.hpp"
 #include "asio/io_service.hpp"
 
 #include <ares.h>
@@ -12,6 +12,8 @@
 #include <iostream>
 #include <regex>
 #include <vector>
+
+#include "socket_wrapper.hpp"
 
 using namespace tuposoft::vrf;
 
@@ -204,50 +206,6 @@ auto tuposoft::vrf::operator<<(std::ostream &os, const vrf_data &data) -> declty
     return os;
 }
 
-auto tuposoft::vrf::check_mx(const std::string &email, const std::string &mail_server) -> int {
-    asio::io_service ios;
-    asio::ip::tcp::resolver tcp_resolver(ios);
-    asio::ip::tcp::resolver::query query(mail_server, "25");
-    asio::ip::tcp::resolver::iterator endpoint_iterator = tcp_resolver.resolve(query);
-    asio::ip::tcp::socket socket(ios);
-    asio::error_code error = asio::error::host_not_found;
-
-    while (error && endpoint_iterator != asio::ip::tcp::resolver::iterator()) {
-        socket.close();
-        auto ec = socket.connect(*endpoint_iterator++, error);
-        if (ec) {
-            std::cout << "Error occurred: " << ec.message() << '\n';
-        }
-    }
-    if (error) {
-        throw asio::system_error(error);
-    }
-
-    // Read the server's greeting message
-    asio::streambuf response;
-    asio::read_until(socket, response, "\n");
-
-    // Send EHLO command
-    std::string ehlo_cmd = "EHLO client.example.com\r\n";
-    asio::write(socket, asio::buffer(ehlo_cmd), error);
-
-    // Send MAIL FROM command
-    std::string mail_from_cmd = "MAIL FROM:< example@example.com>\r\n";
-    asio::write(socket, asio::buffer(mail_from_cmd), error);
-
-    // Send RCPT TO command
-    std::string rcpt_to_cmd = "RCPT TO:<" + email + ">\r\n";
-    asio::write(socket, asio::buffer(rcpt_to_cmd), error);
-
-    // Read the server's response
-    asio::read_until(socket, response, "\n");
-
-    // Check if the recipient is valid
-    std::istream response_stream(&response);
-    std::string server_response;
-    std::getline(response_stream, server_response);
-
-    return std::stoi(server_response);
-}
+auto tuposoft::vrf::check_mx(const std::string &mx_record, const std::string &email) -> int { return {}; }
 
 auto tuposoft::vrf::verify(const std::string &email) -> vrf_data { return {}; }

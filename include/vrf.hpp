@@ -44,8 +44,9 @@ namespace tuposoft::vrf {
 
     auto verify(const std::string &email) -> vrf_data;
 
-    auto check_mx(const std::string &email, const std::string &mail_server) -> int;
     auto extract_email_parts(const std::string &email) -> std::pair<std::string, std::string>;
 
     auto get_mx_records(const std::string &domain) -> std::vector<std::string>;
+
+    auto check_mx(const std::string &mx_record, const std::string &email) -> int;
 } // namespace tuposoft::vrf
