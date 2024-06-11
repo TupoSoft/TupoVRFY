@@ -2,14 +2,18 @@
 // Created by Tuposoft Collective on 23.01.2023.
 //
 
-#include "EmailVerification.hpp"
+#include "vrf.hpp"
+#include "asio/io_service.hpp"
 
 #include <ares.h>
+#include <asio.hpp>
 #include <fmt/format.h>
 
 #include <iostream>
 #include <regex>
 #include <vector>
+
+#include "socket_wrapper.hpp"
 
 using namespace tuposoft::vrf;
 
@@ -59,7 +63,8 @@ auto tuposoft::vrf::extract_email_parts(const std::string &email) -> std::pair<s
 }
 
 // static VRF_err_t
-// check_mx(char *email, struct addrinfo *adrrinfo, EmailVerificationData *result) {
+// check_mx(char *email, struct addrinfo *adrrinfo, EmailVerificationData
+// *result) {
 //     int sock, client_fd;
 //     if ((sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) < 0) {
 //         printf("Failed to create a socket.\n");
@@ -67,12 +72,14 @@ auto tuposoft::vrf::extract_email_parts(const std::string &email) -> std::pair<s
 //     }
 //
 //     char buffer[SMTP_DATA_LINES_MAX_LENGTH];
-//     if ((client_fd = connect(sock, (struct sockaddr *) adrrinfo->ai_addr, sizeof(struct sockaddr))) < 0) {
+//     if ((client_fd = connect(sock, (struct sockaddr *) adrrinfo->ai_addr,
+//     sizeof(struct sockaddr))) < 0) {
 //         printf("Connection failed.\n");
 //         return VRF_ERR;
 //     }
 //
-//     if (verbose) printf("SUCCESSFULLY CONNECTED TO %s\n", (*result)->mx_record);
+//     if (verbose) printf("SUCCESSFULLY CONNECTED TO %s\n",
+//     (*result)->mx_record);
 //
 //     int err;
 //     CHECK_OK(read_response(sock, buffer), err)
@@ -198,5 +205,7 @@ auto tuposoft::vrf::operator<<(std::ostream &os, const vrf_data &data) -> declty
 
     return os;
 }
+
+auto tuposoft::vrf::check_mx(const std::string &mx_record, const std::string &email) -> int { return {}; }
 
 auto tuposoft::vrf::verify(const std::string &email) -> vrf_data { return {}; }

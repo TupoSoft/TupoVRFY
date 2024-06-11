@@ -1,4 +1,4 @@
-#include "EmailVerification.hpp"
+#include "vrf.hpp"
 
 #include <fmt/format.h>
 #include <gtest/gtest.h>
@@ -6,15 +6,15 @@
 
 using namespace tuposoft::vrf;
 
-TEST(EmailVerificationTest, ThrowsInvalidArgumentErrorOnInvalidInput) {
+TEST(VRF_TEST, ThrowsInvalidArgumentErrorOnInvalidInput) {
     EXPECT_THROW(extract_email_parts("john.doe"), std::invalid_argument);
 }
 
-TEST(EmailVerificationTest, ThrowsInvalidArgumentErrorOnInvalidInput2) {
+TEST(VRF_TEST, ThrowsInvalidArgumentErrorOnInvalidInput2) {
     EXPECT_THROW(extract_email_parts("test.email@@mail.com"), std::invalid_argument);
 }
 
-TEST(EmailVerificationTest, ExtractUsernameAndDomainSuccess) {
+TEST(VRF_TEST, ExtractUsernameAndDomainSuccess) {
     const std::string expectedUsername{"john.doe"};
     const auto expectedDomain{"example.com"};
     const auto email{expectedUsername + '@' + expectedDomain};
@@ -25,13 +25,13 @@ TEST(EmailVerificationTest, ExtractUsernameAndDomainSuccess) {
     EXPECT_EQ(actualDomain, expectedDomain);
 }
 
-TEST(EmailVerificationTest, GetMXRecordsSuccess) {
+TEST(VRF_TEST, GetMXRecordsSuccess) {
     const auto domain{"tuposoft.com"};
     const std::vector result = {std::string{"mail."} + domain};
     EXPECT_EQ(result, get_mx_records(domain));
 }
 
-TEST(EmailVerificationTest, EmailVerificationDataOutputSuccess) {
+TEST(VRF_TEST, EmailVerificationDataOutputSuccess) {
     const auto data = vrf_data{
             "john.doe@tuposoft.com", "john.doe", "tuposoft.com", "mail.tuposoft.com", vrf_result::success, false,
     };
@@ -50,4 +50,9 @@ TEST(EmailVerificationTest, EmailVerificationDataOutputSuccess) {
     const auto actual = os.str();
 
     EXPECT_EQ(expected, actual);
+}
+
+TEST(VRF_TEST, CHECK_MX_1) {
+    const auto result = check_mx("mail.tuposoft.com", "kk@tuposoft.com");
+    EXPECT_EQ(250, result);
 }
