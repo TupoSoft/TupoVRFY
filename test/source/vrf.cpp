@@ -1,6 +1,10 @@
 #include "vrf.hpp"
 
+#include "gmock/gmock.h"
+#include "mocks/mock_socket.hpp"
+
 #include <fmt/format.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdexcept>
 
@@ -28,13 +32,13 @@ TEST(VRF_TEST, ExtractUsernameAndDomainSuccess) {
 TEST(VRF_TEST, GetMXRecordsSuccess) {
     const auto domain{"tuposoft.com"};
     const std::vector result = {std::string{"mail."} + domain};
+
     EXPECT_EQ(result, get_mx_records(domain));
 }
 
 TEST(VRF_TEST, EmailVerificationDataOutputSuccess) {
-    const auto data = vrf_data{
-            "john.doe@tuposoft.com", "john.doe", "tuposoft.com", "mail.tuposoft.com", vrf_result::success, false,
-    };
+    const auto data = verifier::data{"john.doe@tuposoft.com", "john.doe", "tuposoft.com", "mail.tuposoft.com",
+                                     verifier::status::success};
 
     const auto expected = fmt::format("\nVerification summary:\n"
                                       "email: {}\n"
@@ -53,6 +57,13 @@ TEST(VRF_TEST, EmailVerificationDataOutputSuccess) {
 }
 
 TEST(VRF_TEST, CHECK_MX_1) {
-    const auto result = check_mx("mail.tuposoft.com", "kk@tuposoft.com");
+    // auto socket = std::make_unique<mock_socket>();
+    // EXPECT_CALL(socket->close()).WillOnce();
+    auto socket = std::make_unique<mock_socket>();
+    auto buffer = std::vector<std::byte>(128);
+    EXPECT_CALL(*socket, read(buffer)).WillOnce(testing::Return(1));
+    auto verifier = tuposoft::vrf::verifier(nullptr);
+
+    const auto result = verifier.check_mx("mail.tuposoft.com", "kk@tuposoft.com");
     EXPECT_EQ(250, result);
 }
