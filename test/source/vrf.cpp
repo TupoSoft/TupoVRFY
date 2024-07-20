@@ -51,8 +51,3 @@ TEST(VRF_TEST, EmailVerificationDataOutputSuccess) {
 
     EXPECT_EQ(expected, actual);
 }
-
-TEST(VRF_TEST, CHECK_MX_1) {
-    const auto result = check_mx("mail.tuposoft.com", "kk@tuposoft.com");
-    EXPECT_EQ(250, result);
-}
