@@ -33,7 +33,7 @@ jobs:
         run: cmake -Stest -Bbuild -DCMAKE_BUILD_TYPE=Release
 
       - name: build
-        run: cmake --build build -j$(sysctl -n hw.logicalcpu)
+        run: cmake --build build -j
 
       - name: test
         run: |
