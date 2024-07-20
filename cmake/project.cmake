@@ -1,16 +1,21 @@
 set(PROJECT_NAMESPACE "tuposoft")
-set(PROJECT_NAME "vrf")
+
+set(BASE_PROJECT_NAME "tupovrfy")
+set(TEST_PROJECT_NAME "${BASE_PROJECT_NAME}_test")
+set(STANDALONE_PROJECT_NAME "${BASE_PROJECT_NAME}_exec")
+
+set(PROJECT_DESCRIPTION "Email Verifier")
+set(PROJECT_VERSION 0.0.2.0)
+
 set(CMAKE_MINIMUM_REQUIRED_VERSION 3.24)
-set(PROJECT_DESCRIPTION "Email Verification")
-set(PROJECT_VERSION 0.0.3.0)
 set(CMAKE_PROJECT_HOMEPAGE_URL https://tuposoft.com)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 file(
         DOWNLOAD
-        https://github.com/cpm-cmake/CPM.cmake/releases/download/v0.38.3/CPM.cmake
+        https://github.com/cpm-cmake/CPM.cmake/releases/download/v0.40.0/CPM.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake
-        EXPECTED_HASH SHA256=cc155ce02e7945e7b8967ddfaff0b050e958a723ef7aad3766d368940cb15494
+        EXPECTED_HASH SHA256=7B354F3A5976C4626C876850C93944E52C83EC59A159AE5DE5BE7983F0E17A2A
 )
 include(${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake)

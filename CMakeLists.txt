@@ -1,7 +1,7 @@
 include(cmake/project.cmake)
 
 cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
-project(${PROJECT_NAME} VERSION ${PROJECT_VERSION})
+project(${BASE_PROJECT_NAME} VERSION ${PROJECT_VERSION})
 
 if (PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
     message(
@@ -39,13 +39,6 @@ target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>
 target_compile_definitions(${PROJECT_NAME} PRIVATE ASIO_STANDALONE)
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${asio_SOURCE_DIR}/asio/include>)
 
-# ---- Create an installable target ----
-# this allows users to install and find the library via `find_package()`.
-
-# the location where the project's version header will be placed should match the project's regular
-# header paths
-string(TOLOWER ${PROJECT_NAME}/version.h VERSION_HEADER_LOCATION)
-
 CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.11.2")
 
 packageProject(
@@ -55,7 +48,6 @@ packageProject(
         BINARY_DIR ${PROJECT_BINARY_DIR}
         INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
         INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
-        VERSION_HEADER "${VERSION_HEADER_LOCATION}"
         COMPATIBILITY SameMajorVersion
         DEPENDENCIES ${DEPENDENCIES}
 )
