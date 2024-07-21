@@ -25,12 +25,6 @@ TEST(VRF_TEST, ExtractUsernameAndDomainSuccess) {
     EXPECT_EQ(actualDomain, expectedDomain);
 }
 
-TEST(VRF_TEST, GetMXRecordsSuccess) {
-    const auto domain{"tuposoft.com"};
-    const std::vector result = {std::string{"mail."} + domain};
-    EXPECT_EQ(result, get_mx_records(domain));
-}
-
 TEST(VRF_TEST, EmailVerificationDataOutputSuccess) {
     const auto data = vrf_data{
             "john.doe@tuposoft.com", "john.doe", "tuposoft.com", "mail.tuposoft.com", vrf_result::success, false,

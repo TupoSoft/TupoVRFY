@@ -13,24 +13,13 @@ endif ()
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp")
 
-configure_file(config.h.in config.h @ONLY)
 add_library(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
 CPMAddPackage("gh:fmtlib/fmt#10.2.1")
-CPMAddPackage("gh:c-ares/c-ares@1.30.0")
-CPMAddPackage(
-        NAME asio
-        GITHUB_REPOSITORY chriskohlhoff/asio
-        GIT_TAG asio-1-30-2
-        DOWNLOAD_ONLY yes
-)
-CPMAddPackage(
-    NAME tuporesolv
-    GIT_REPOSITORY https://github.com/Tuposoft/tuporesolv.git
-    GIT_TAG origin/master
-)
+CPMAddPackage("gh:Tuposoft/TupoResolv#b6470ef26b6ef8033a50fd247b78dafe5ffc1048")
+CPMAddPackage("gh:chriskohlhoff/asio#asio-1-30-2")
 
-set(DEPENDENCIES "fmt" "c-ares" "tuporesolv")
+set(DEPENDENCIES "fmt" "tuporesolv")
 if (WIN32)
     add_definitions(-D_WIN32_WINNT=0x0A00)
     list(APPEND DEPENDENCIES "ws2_32")
@@ -39,7 +28,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${DEPENDENCIES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 23)
 
-# being a cross-platform target, we enforce standards conformance on MSVC
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
 target_compile_definitions(${PROJECT_NAME} PRIVATE ASIO_STANDALONE)
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${asio_SOURCE_DIR}/asio/include>)
@@ -54,5 +42,4 @@ packageProject(
         INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
         INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
         COMPATIBILITY SameMajorVersion
-        DEPENDENCIES ${DEPENDENCIES}
 )
