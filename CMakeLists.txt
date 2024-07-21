@@ -24,8 +24,13 @@ CPMAddPackage(
         GIT_TAG asio-1-30-2
         DOWNLOAD_ONLY yes
 )
+CPMAddPackage(
+    NAME tuporesolv
+    GIT_REPOSITORY https://github.com/Tuposoft/tuporesolv.git
+    GIT_TAG origin/master
+)
 
-set(DEPENDENCIES "fmt" "c-ares")
+set(DEPENDENCIES "fmt" "c-ares" "tuporesolv")
 if (WIN32)
     add_definitions(-D_WIN32_WINNT=0x0A00)
     list(APPEND DEPENDENCIES "ws2_32")
