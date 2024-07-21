@@ -17,9 +17,16 @@ add_library(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
 CPMAddPackage("gh:fmtlib/fmt#10.2.1")
 CPMAddPackage("gh:Tuposoft/TupoResolv#b6470ef26b6ef8033a50fd247b78dafe5ffc1048")
-CPMAddPackage("gh:chriskohlhoff/asio#asio-1-30-2")
 
-set(DEPENDENCIES "fmt" "tuporesolv")
+set(BOOST_INCLUDE_LIBRARIES "asio")
+set(BOOST_SKIP_INSTALL_RULES OFF)
+CPMAddPackage(
+        NAME Boost
+        VERSION 1.85.0
+        URL https://github.com/boostorg/boost/releases/download/boost-1.85.0/boost-1.85.0-cmake.tar.xz
+)
+
+set(DEPENDENCIES "fmt" "tuporesolv" "boost_asio")
 if (WIN32)
     add_definitions(-D_WIN32_WINNT=0x0A00)
     list(APPEND DEPENDENCIES "ws2_32")
@@ -30,7 +37,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 23)
 
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
 target_compile_definitions(${PROJECT_NAME} PRIVATE ASIO_STANDALONE)
-target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${asio_SOURCE_DIR}/asio/include>)
+target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
 
 CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.11.2")
 

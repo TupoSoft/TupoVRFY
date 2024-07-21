@@ -5,7 +5,6 @@
 #pragma once
 
 #include <string>
-#include <vector>
 
 namespace tuposoft::vrf {
     enum class vrf_result : std::uint8_t {
@@ -21,7 +20,7 @@ namespace tuposoft::vrf {
         bool catch_all;
     };
 
-    auto operator<<(std::ostream &os, const vrf_data &data) -> decltype(os);
+    auto operator<<(std::ostream &out, const vrf_data &data) -> decltype(out);
 
     auto verify(const std::string &email) -> vrf_data;
 
