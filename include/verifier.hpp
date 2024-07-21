@@ -8,8 +8,7 @@
 namespace tuposoft::vrf {
     class verifier {
     public:
-        explicit verifier(const asio::any_io_executor &executor) : resolv_(executor), socket_(executor) {
-        }
+        explicit verifier(const asio::any_io_executor &executor) : resolv_(executor), socket_(executor) {}
 
         auto verify(std::string) -> asio::awaitable<vrf_data>;
 
@@ -19,4 +18,4 @@ namespace tuposoft::vrf {
 
         static constexpr auto SMTP_PORT = 25;
     };
-}
+} // namespace tuposoft::vrf
