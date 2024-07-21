@@ -26,17 +26,14 @@ CPMAddPackage(
         URL https://github.com/boostorg/boost/releases/download/boost-1.85.0/boost-1.85.0-cmake.tar.xz
 )
 
-set(DEPENDENCIES "fmt" "tuporesolv" "boost_asio")
+set(DEPENDENCIES "fmt::fmt" "boost_asio" "tuporesolv")
 if (WIN32)
     add_definitions(-D_WIN32_WINNT=0x0A00)
     list(APPEND DEPENDENCIES "ws2_32")
 endif ()
-target_link_libraries(${PROJECT_NAME} PUBLIC ${DEPENDENCIES})
-
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 23)
 
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
-target_compile_definitions(${PROJECT_NAME} PRIVATE ASIO_STANDALONE)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${DEPENDENCIES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
 
 CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.11.2")

@@ -1,4 +1,5 @@
 #include "vrf.hpp"
+#include "vrf_data.hpp"
 
 #include <fmt/format.h>
 #include <gtest/gtest.h>
@@ -27,7 +28,7 @@ TEST(VRF_TEST, ExtractUsernameAndDomainSuccess) {
 
 TEST(VRF_TEST, EmailVerificationDataOutputSuccess) {
     const auto data = vrf_data{
-            "john.doe@tuposoft.com", "john.doe", "tuposoft.com", "mail.tuposoft.com", vrf_result::success, false,
+        "john.doe@tuposoft.com", "john.doe", "tuposoft.com", "mail.tuposoft.com", vrf_result::success, false,
     };
 
     const auto expected = fmt::format("\nVerification summary:\n"

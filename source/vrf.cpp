@@ -3,6 +3,7 @@
 //
 
 #include "vrf.hpp"
+#include "vrf_data.hpp"
 
 #include "boost/asio.hpp"
 #include "fmt/format.h"
@@ -43,5 +44,3 @@ auto tuposoft::vrf::operator<<(std::ostream &os, const vrf_data &data) -> declty
 }
 
 auto tuposoft::vrf::check_mx(const std::string &mx_record, const std::string &email) -> int { return {}; }
-
-auto tuposoft::vrf::verify(const std::string &email) -> vrf_data { return {}; }
