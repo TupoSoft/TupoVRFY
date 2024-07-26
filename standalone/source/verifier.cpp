@@ -111,5 +111,22 @@ auto main(const int argc, char *argv[]) -> int {
 
     auto io_context = asio::io_context{threads};
 
+    co_spawn(io_context, listen(asio::ip::tcp::endpoint{address, port}), [](const std::exception_ptr &exc) {
+        if (exc) {
+            try {
+                std::rethrow_exception(exc);
+            } catch (std::exception &exception) {
+                std::cerr << "Error in acceptor: " << exception.what() << "\n";
+            }
+        }
+    });
+
+    auto t = std::vector<std::thread>{};
+    t.reserve(threads - 1);
+    for (auto i = threads - 1; i > 0; --i) {
+        t.emplace_back([&io_context] { io_context.run(); });
+    }
+    io_context.run();
+
     return 0;
 }
