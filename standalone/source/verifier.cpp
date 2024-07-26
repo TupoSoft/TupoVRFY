@@ -2,6 +2,7 @@
 
 #include "boost/beast.hpp"
 #include "boost/url.hpp"
+#include "cxxopts.hpp"
 
 #include <span>
 
@@ -12,7 +13,7 @@ using tcp_stream = beast::tcp_stream::rebind_executor<
         asio::use_awaitable_t<>::executor_with_default<asio::any_io_executor>>::other;
 
 template<class Body, class Allocator>
-auto handle_request(http::request<Body, http::basic_fields<Allocator>> &&request) {
+auto handle_request(http::request<Body, http::basic_fields<Allocator>> &&request) -> http::message_generator {
     const auto bad_request = [&request](const std::string_view why) {
         auto response = http::response<http::string_body>{http::status::bad_request, request.version()};
         response.set(http::field::server, BOOST_BEAST_VERSION_STRING);
@@ -76,6 +77,14 @@ auto handle_session(tcp_stream stream) -> asio::awaitable<void> {
 
             auto request = http::request<http::string_body>{};
             co_await http::async_read(stream, buffer, request);
+            auto msg = handle_request(std::move(request));
+            const auto keep_alive = msg.keep_alive();
+
+            co_await beast::async_write(stream, std::move(msg), asio::use_awaitable);
+
+            if (!keep_alive) {
+                break;
+            }
         }
     } catch (std::exception &e) {
         std::cerr << "Error: " << e.what() << '\n';
@@ -88,45 +97,63 @@ auto listen(const asio::ip::tcp::endpoint endpoint) -> asio::awaitable<void> {
     acceptor.set_option(asio::socket_base::reuse_address(true));
     acceptor.bind(endpoint);
     acceptor.listen();
+
+    auto verifier = std::make_shared<tupovrf::verifier>(co_await asio::this_coro::executor);
+
+    for (;;) {
+        co_spawn(acceptor.get_executor(), handle_session(tcp_stream(co_await acceptor.async_accept())),
+                 [](const std::exception_ptr &e_ptr) {
+                     if (e_ptr) {
+                         try {
+                             std::rethrow_exception(e_ptr);
+                         } catch (std::exception &exc) {
+                             std::cerr << "Error in session: " << exc.what() << "\n";
+                         }
+                     }
+                 });
+    }
 };
 
 auto main(const int argc, char *argv[]) -> int {
-    const auto args = std::span{argv, static_cast<std::size_t>(argc)};
+    try {
+        auto options = cxxopts::Options{"Email Verifier", "The program to verify emails."};
+        options.add_options()("h,host", "Host", cxxopts::value<std::string>()->default_value("0.0.0.0"))(
+                "p,port", "Port", cxxopts::value<std::uint16_t>()->default_value("8080"))(
+                "t,thread", "Thread count", cxxopts::value<int>()->default_value("1"));
+        const auto result = options.parse(argc, argv);
 
-    if (args.size() != 4) {
-        std::cerr << "Usage: verifier <address> <port> <threads>\n"
-                  << "Example:\n"
-                  << "    verifier 0.0.0.0 8080 1\n";
-    }
-
-    const auto address = asio::ip::make_address(args[1]);
-
-    const auto *port_cstr = args[2];
-    char *end = nullptr;
-    const auto port = static_cast<std::uint16_t>(std::strtoul(port_cstr, &end, 0));
-
-    end = nullptr;
-    const auto *threads_cstr = args[3];
-    const auto threads = std::max(1, static_cast<const int>(std::strtoul(threads_cstr, &end, 0)));
-
-    auto io_context = asio::io_context{threads};
-
-    co_spawn(io_context, listen(asio::ip::tcp::endpoint{address, port}), [](const std::exception_ptr &exc) {
-        if (exc) {
-            try {
-                std::rethrow_exception(exc);
-            } catch (std::exception &exception) {
-                std::cerr << "Error in acceptor: " << exception.what() << "\n";
-            }
+        if (result.count("help") != 0U) {
+            std::cout << options.help() << '\n';
+            return EXIT_SUCCESS;
         }
-    });
 
-    auto t = std::vector<std::thread>{};
-    t.reserve(threads - 1);
-    for (auto i = threads - 1; i > 0; --i) {
-        t.emplace_back([&io_context] { io_context.run(); });
+        const auto host = result["host"].as<std::string>();
+        const auto port = result["post"].as<std::uint16_t>();
+        const auto thread_count = result["thread"].as<int>();
+
+        auto io_context = asio::io_context{thread_count};
+
+        co_spawn(io_context, listen(asio::ip::tcp::endpoint{asio::ip::address::from_string(host), port}),
+                 [](const std::exception_ptr &exc) {
+                     if (exc) {
+                         try {
+                             std::rethrow_exception(exc);
+                         } catch (std::exception &exception) {
+                             std::cerr << "Error in acceptor: " << exception.what() << "\n";
+                         }
+                     }
+                 });
+
+        auto threads = std::vector<std::thread>{};
+        threads.reserve(thread_count - 1);
+        for (auto i = thread_count - 1; i > 0; --i) {
+            threads.emplace_back([&io_context] { io_context.run(); });
+        }
+        io_context.run();
+    } catch (std::exception &e) {
+        std::cerr << e.what() << '\n';
+        return EXIT_FAILURE;
     }
-    io_context.run();
 
-    return 0;
+    return EXIT_SUCCESS;
 }
