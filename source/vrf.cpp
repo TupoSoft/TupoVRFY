@@ -11,9 +11,9 @@
 #include <iostream>
 #include <regex>
 
-using namespace tuposoft::vrf;
+using namespace tuposoft::tupovrf;
 
-auto tuposoft::vrf::extract_email_parts(const std::string &email) -> std::pair<std::string, std::string> {
+auto tuposoft::tupovrf::extract_email_parts(const std::string &email) -> std::pair<std::string, std::string> {
     static const auto email_regex = std::regex(R"((\w+[\w\.]*)@(\w+\.\w+))");
 
     if (auto matches = std::smatch(); std::regex_search(email, matches, email_regex)) {
@@ -29,7 +29,7 @@ struct fd_sets {
     fd_set write_fds;
 };
 
-auto tuposoft::vrf::operator<<(std::ostream &os, const vrf_data &data) -> decltype(os) {
+auto tuposoft::tupovrf::operator<<(std::ostream &os, const vrf_data &data) -> decltype(os) {
     os << fmt::format("\nVerification summary:\n"
                       "email: {}\n"
                       "username: {}\n"
@@ -43,4 +43,4 @@ auto tuposoft::vrf::operator<<(std::ostream &os, const vrf_data &data) -> declty
     return os;
 }
 
-auto tuposoft::vrf::check_mx(const std::string &mx_record, const std::string &email) -> int { return {}; }
+auto tuposoft::tupovrf::check_mx(const std::string &mx_record, const std::string &email) -> int { return {}; }

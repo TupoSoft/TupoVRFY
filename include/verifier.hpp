@@ -5,7 +5,7 @@
 
 #include "boost/asio.hpp"
 
-namespace tuposoft::vrf {
+namespace tuposoft::tupovrf {
     class verifier {
     public:
         explicit verifier(const asio::any_io_executor &executor) : resolv_(executor), socket_(executor) {}

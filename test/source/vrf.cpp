@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 #include <stdexcept>
 
-using namespace tuposoft::vrf;
+using namespace tuposoft::tupovrf;
 
 TEST(VRF_TEST, ThrowsInvalidArgumentErrorOnInvalidInput) {
     EXPECT_THROW(extract_email_parts("john.doe"), std::invalid_argument);

@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace tuposoft::vrf {
+namespace tuposoft::tupovrf {
     auto extract_email_parts(const std::string &email) -> std::pair<std::string, std::string>;
 
     auto check_mx(const std::string &mx_record, const std::string &email) -> int;

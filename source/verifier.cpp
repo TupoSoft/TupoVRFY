@@ -6,7 +6,7 @@
 
 #include <regex>
 
-using namespace tuposoft::vrf;
+using namespace tuposoft::tupovrf;
 using namespace boost::asio;
 
 auto verifier::verify(const std::string email) -> awaitable<vrf_data> {

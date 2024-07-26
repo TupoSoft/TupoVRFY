@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace tuposoft::vrf {
+namespace tuposoft::tupovrf {
     enum class vrf_result : std::uint8_t {
         success, invalid_email, failure, catch_all_detected, invalid_domain, mx_record_not_found
     };
