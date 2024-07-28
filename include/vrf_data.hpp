@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <cstdint>
 
 namespace tuposoft::tupovrf {
     enum class vrf_result : std::uint8_t {

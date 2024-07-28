@@ -16,7 +16,7 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/
 add_library(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
 CPMAddPackage("gh:fmtlib/fmt#10.2.1")
-CPMAddPackage("gh:Tuposoft/TupoResolv#b6470ef26b6ef8033a50fd247b78dafe5ffc1048")
+CPMAddPackage("gh:KyryloKupin/asio_dns_resolver#dc3e6e98ea3132d0896d7caeb7d4c0a0d583a05a")
 
 set(BOOST_INCLUDE_LIBRARIES "asio")
 set(BOOST_SKIP_INSTALL_RULES OFF)
@@ -26,7 +26,7 @@ CPMAddPackage(
         URL https://github.com/boostorg/boost/releases/download/boost-1.85.0/boost-1.85.0-cmake.tar.xz
 )
 
-set(DEPENDENCIES "fmt::fmt" "boost_asio" "tuporesolv")
+set(DEPENDENCIES "fmt::fmt" "boost_asio" "asio_dns_resolver")
 if (WIN32)
     add_definitions(-D_WIN32_WINNT=0x0A00)
     list(APPEND DEPENDENCIES "ws2_32")
